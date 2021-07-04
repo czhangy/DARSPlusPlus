@@ -14,18 +14,18 @@
       <label>Paste your hash code here:</label>
       <input v-model="hashCode" />
       <button @click="handleHashSubmit">GO!</button>
-      <div class="separator">
+      <div class="divider">
         <hr />
         <span>or</span>
         <hr />
       </div>
       <h3>Start from scratch</h3>
       <label>Select your major:</label>
-      <select v-model="major">
+      <select v-model="selectedMajor">
         <option disabled value="">Select your major</option>
-        <option value="CE">Computer Engineering</option>
-        <option value="COMSCI">Computer Science</option>
-        <option value="CSE">Computer Science and Engineering</option>
+        <option>Computer Engineering</option>
+        <option>Computer Science</option>
+        <option>Computer Science and Engineering</option>
       </select>
       <button @click="handleFormSubmit">GO!</button>
     </div>
@@ -33,24 +33,46 @@
 </template>
 
 <script>
+import { mapGetters } from "vuex";
+import Swal from "sweetalert2";
+
 export default {
   name: "Home",
   data() {
     return {
       hashCode: "",
-      major: "",
-      courses: [],
     };
   },
   methods: {
     handleHashSubmit: function () {
-      alert(`The handleHashSubmit() function in Home.vue must still be implemented, here are the relevant data points for testing:\n
-            hashCode = "${this.hashCode}"`);
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "This feature is still under development.",
+      });
     },
     handleFormSubmit: function () {
-      alert(`The handleHashSubmit() function in Home.vue must still be implemented, here are the relevant data points for testing:\n
-            major = "${this.major}"
-            courses = "${this.courses}"`);
+      if (this.major == null)
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: "Please select a major to proceed.",
+        });
+      else
+        this.$router
+          .push({ path: "summary" })
+          .then(() => window.scrollTo(0, 0));
+    },
+  },
+  computed: {
+    ...mapGetters(["major"]),
+    selectedMajor: {
+      get() {
+        return this.$store.state.major;
+      },
+      set(value) {
+        this.$store.commit("setMajor", value);
+      },
     },
   },
 };
@@ -58,18 +80,7 @@ export default {
 
 <style lang="scss" scoped>
 .home {
-  button {
-    // Remove default styling
-    border: none;
-    // Typography
-    font-family: $alt-font;
-    color: white;
-    // Button styling
-    background: $ucla-blue;
-    // Clickable
-    cursor: pointer;
-  }
-
+  overflow-x: hidden;
   .landing-page {
     // Set background image
     background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
@@ -160,7 +171,7 @@ export default {
       border-radius: 10px;
     }
 
-    .separator {
+    .divider {
       // Flexbox for layout and centering
       display: flex;
       justify-content: center;
@@ -171,7 +182,7 @@ export default {
       hr {
         // Sizing
         width: 35%;
-        height: 3px;
+        height: $line;
         // Coloring
         background: $ucla-blue;
         // Remove default styling
@@ -195,17 +206,6 @@ export default {
       font-family: $alt-font;
       // Inner spacing
       padding: 0.2rem 0.5rem;
-    }
-  }
-}
-
-// Protect against sticky hover
-@media (hover: hover) {
-  button {
-    &:hover {
-      // Animate button on hover
-      transform: scale(1.05);
-      transition: transform 0.2s ease;
     }
   }
 }
