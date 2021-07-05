@@ -52,7 +52,7 @@ export default {
       });
     },
     handleFormSubmit: function () {
-      if (this.major == null)
+      if (this.major == "Testing" || this.major == null)
         Swal.fire({
           icon: "error",
           title: "Oops...",
@@ -80,7 +80,6 @@ export default {
 
 <style lang="scss" scoped>
 .home {
-  overflow-x: hidden;
   .landing-page {
     // Set background image
     background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),

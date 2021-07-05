@@ -8,11 +8,15 @@
     <div class="courses">
       <div>
         <h2>Course Catalog</h2>
-        <div class="course-container"></div>
+        <div class="course-container">
+          <CourseList :enableSelect="true" :contents="courseCatalog" :onClick="handleCourseSelection" />
+        </div>
       </div>
       <div>
         <h2>Completed Courses</h2>
-        <div class="course-container"></div>
+        <div class="course-container">
+          <CourseList :enableDelete="true" :contents="completedCourses" :onClick="handleCourseDeletion" />
+        </div>
       </div>
     </div>
     <button @click="handleCoursesSubmit">SUBMIT!</button>
@@ -47,11 +51,32 @@
 <script>
 import { mapGetters } from "vuex";
 import Swal from "sweetalert2";
+import CourseList from "@/components/CourseList";
 
 export default {
   name: "Summary",
+  components: {
+    CourseList,
+  },
   computed: {
     ...mapGetters(["major"]),
+  },
+  data() {
+    return {
+      courseCatalog: [
+        "COM SCI 1",
+        "COM SCI 31",
+        "COM SCI 32",
+        "COM SCI 33",
+        "COM SCI 35L",
+        "COM SCI M51A",
+        "MATH 31A",
+        "MATH 31B",
+        "MATH 32A",
+        "MATH 32B",
+      ],
+      completedCourses: [],
+    };
   },
   methods: {
     handleCoursesSubmit: function () {
@@ -61,6 +86,35 @@ export default {
         text: "This feature is still under development.",
       });
     },
+    handleCourseSelection(course) {
+      // Get index of element
+      const index = this.courseCatalog.indexOf(course);
+      // Error checking
+      if (index > -1)
+        // Remove from left list
+        this.courseCatalog.splice(index, 1);
+      else
+        console.log(
+          "Something went very wrong in handleCourseSelection in Summary.vue"
+        );
+      // Insert into right list and sort
+      this.completedCourses.push(course);
+    },
+    handleCourseDeletion(course) {
+      // Get index of element
+      const index = this.completedCourses.indexOf(course);
+      // Error checking
+      if (index > -1)
+        // Remove from left list
+        this.completedCourses.splice(index, 1);
+      else
+        console.log(
+          "Something went very wrong in handleCourseDeletion in Summary.vue"
+        );
+      // Insert into right list and sort
+      this.courseCatalog.push(course);
+      this.courseCatalog.sort();
+    }
   },
 };
 </script>
@@ -126,11 +180,13 @@ export default {
     .course-container {
       // Container sizing
       height: 70vh;
-      width: 30vw;
+      width: 40vw;
       // Visualize container
       border: $line solid $ucla-blue;
       // Scroll for overflowing courses
       overflow-y: scroll;
+      // Background
+      background: $ucla-blue;
     }
   }
 
