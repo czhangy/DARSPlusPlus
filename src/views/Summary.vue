@@ -9,13 +9,21 @@
       <div>
         <h2>Course Catalog</h2>
         <div class="course-container">
-          <CourseList :enableSelect="true" :contents="courseCatalog" :onClick="handleCourseSelection" />
+          <CourseList
+            :enableSelect="true"
+            :contents="courseCatalog"
+            :onClick="handleCourseSelection"
+          />
         </div>
       </div>
       <div>
         <h2>Completed Courses</h2>
         <div class="course-container">
-          <CourseList :enableDelete="true" :contents="completedCourses" :onClick="handleCourseDeletion" />
+          <CourseList
+            :enableDelete="true"
+            :contents="completedCourses"
+            :onClick="handleCourseDeletion"
+          />
         </div>
       </div>
     </div>
@@ -51,6 +59,7 @@
 <script>
 import { mapGetters } from "vuex";
 import Swal from "sweetalert2";
+import axios from "axios";
 import CourseList from "@/components/CourseList";
 
 export default {
@@ -63,18 +72,8 @@ export default {
   },
   data() {
     return {
-      courseCatalog: [
-        "COM SCI 1",
-        "COM SCI 31",
-        "COM SCI 32",
-        "COM SCI 33",
-        "COM SCI 35L",
-        "COM SCI M51A",
-        "MATH 31A",
-        "MATH 31B",
-        "MATH 32A",
-        "MATH 32B",
-      ],
+      majorObj: null,
+      courseCatalog: [],
       completedCourses: [],
     };
   },
@@ -114,7 +113,22 @@ export default {
       // Insert into right list and sort
       this.courseCatalog.push(course);
       this.courseCatalog.sort();
-    }
+    },
+  },
+  created() {
+    // Fetch courses
+    let uri = "http://localhost:5000/courses";
+    axios.get(uri).then((response) => {
+      // Save course info
+      this.courses = response.data;
+      // Map to course catalog
+      this.courseCatalog = this.courses.map((course) => course.name).sort();
+    });
+    // Fetch major
+    uri = `http://localhost:5000/majors/${this.major}`;
+    axios.get(uri).then((response) => {
+      this.majorObj = response.data[0];
+    });
   },
 };
 </script>

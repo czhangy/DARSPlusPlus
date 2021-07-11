@@ -27,8 +27,8 @@ mongoose
   .catch((err) => console.log(err));
 
 // Apply routes
-const coursesRouter = require('./routes/courses');
-const majorsRouter = require('./routes/majors')
+const coursesRouter = require('./routes/course.route');
+const majorsRouter = require('./routes/major.route')
 app.use('/courses', coursesRouter);
 app.use('/majors', majorsRouter);
 

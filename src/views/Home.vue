@@ -23,9 +23,14 @@
       <label>Select your major:</label>
       <select v-model="selectedMajor">
         <option disabled value="">Select your major</option>
+        <option>Aerospace Engineering</option>
+        <option>Bioengineering</option>
+        <option>Chemical Engineering</option>
+        <option>Civil Engineering</option>
         <option>Computer Engineering</option>
         <option>Computer Science</option>
         <option>Computer Science and Engineering</option>
+        <option>Electrical Engineering</option>
       </select>
       <button @click="handleFormSubmit">GO!</button>
     </div>

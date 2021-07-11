@@ -13,8 +13,8 @@ const majorSchema = new Schema({
     unique: true,
   },
   reqCourses: {
-      type: Array,
-      default: [],
+      type: Object,
+      default: {},
   },
   numGEs: {
       type: Number,

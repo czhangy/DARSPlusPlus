@@ -1,5 +1,5 @@
 let state = {
-  major: "Testing",
+  major: "Computer Science",
 };
 
 let getters = {
