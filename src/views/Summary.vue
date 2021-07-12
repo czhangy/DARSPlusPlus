@@ -1,5 +1,5 @@
 <template>
-  <div class="summary">
+  <div class="summary" v-if="majorObj">
     <div class="summary-header">
       <hr />
       <h1>{{ major }}</h1>
@@ -27,13 +27,30 @@
         </div>
       </div>
     </div>
+    <div class="misc">
+      <div class="field">
+        <label>GEs: </label>
+        <input v-model="gesCompleted" />
+        <p>/ {{ majorObj.numGEs }}</p>
+      </div>
+      <div class="field">
+        <label>Tech Breadths: </label>
+        <input v-model="breadthsCompleted" />
+        <p>/ {{ majorObj.numTechBreadths }}</p>
+      </div>
+      <div class="field" v-if="majorObj.numSciTechs > 0">
+        <label>Sci Techs: </label>
+        <input v-model="sciTechsCompleted" />
+        <p>/ {{ majorObj.numSciTechs }}</p>
+      </div>
+    </div>
     <button @click="handleCoursesSubmit">SUBMIT!</button>
     <div class="separator" />
     <div class="data">
       <div class="data-headers">
         <div class="data-container">
           <h2>GPA:</h2>
-          <p>2.98</p>
+          <p>{{ gpa }}</p>
         </div>
         <div class="data-container mid-container">
           <h2>Remaining Courses:</h2>
@@ -75,6 +92,10 @@ export default {
       majorObj: null,
       courseCatalog: [],
       completedCourses: [],
+      gpa: null,
+      gesCompleted: 0,
+      breadthsCompleted: 0,
+      sciTechsCompleted: 0,
     };
   },
   methods: {
@@ -201,6 +222,48 @@ export default {
       overflow-y: scroll;
       // Background
       background: $ucla-blue;
+    }
+  }
+
+  .misc {
+    // Border
+    border: $line solid $ucla-blue;
+    // Sizing
+    width: 40%;
+    // Spacing
+    margin-bottom: 5rem;
+    padding: 2rem;
+
+    .field {
+      // Flexbox for layout
+      display: flex;
+      align-items: center;
+      // Typography
+      font-size: $subheader-font;
+      // Spacing
+      margin: 1rem;
+
+      label {
+        // Spacing
+        margin-right: 1rem;
+      }
+
+      input {
+        // Sizing
+        width: 2rem;
+        // Spacing
+        margin-right: 0.7rem;
+        // Typography
+        font-family: $alt-font;
+        font-size: $subheader-font;
+        // Centering
+        text-align: center;
+      }
+
+      p {
+        // Typography
+        font-family: $alt-font;
+      }
     }
   }
 
