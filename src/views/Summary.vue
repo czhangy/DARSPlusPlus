@@ -10,7 +10,7 @@
         <h2>Course Catalog</h2>
         <div class="course-container">
           <CourseList
-            :enableSelect="true"
+            :isCatalog="true"
             :contents="courseCatalog"
             :onClick="handleCourseSelection"
           />
@@ -20,9 +20,9 @@
         <h2>Completed Courses</h2>
         <div class="course-container">
           <CourseList
-            :enableDelete="true"
+            :isCompleted="true"
             :contents="completedCourses"
-            :onClick="handleCourseDeletion"
+            :onClick="handleCourseSelection"
           />
         </div>
       </div>
@@ -33,15 +33,87 @@
         <input v-model="gesCompleted" />
         <p>/ {{ majorObj.numGEs }}</p>
       </div>
+      <div class="misc-grades" v-if="gesCompleted > 0">
+        <label>Grade{{ gesCompleted > 1 ? "s" : "" }}:</label>
+        <select
+          v-for="i in Math.min(majorObj.numGEs, parseInt(gesCompleted))"
+          :key="i"
+          v-model="geGrades[i]"
+        >
+          <option>A/A+</option>
+          <option>A-</option>
+          <option>B+</option>
+          <option>B</option>
+          <option>B-</option>
+          <option>C+</option>
+          <option>C</option>
+          <option>C-</option>
+          <option>D+</option>
+          <option>D</option>
+          <option>D-</option>
+          <option>F</option>
+          <option>P</option>
+        </select>
+      </div>
       <div class="field">
         <label>Tech Breadths: </label>
         <input v-model="breadthsCompleted" />
         <p>/ {{ majorObj.numTechBreadths }}</p>
       </div>
+      <div class="misc-grades" v-if="breadthsCompleted > 0">
+        <label>Grade{{ breadthsCompleted > 1 ? "s" : "" }}:</label>
+        <select
+          v-for="i in Math.min(
+            majorObj.numTechBreadths,
+            parseInt(breadthsCompleted)
+          )"
+          :key="i"
+          v-model="techBreadthGrades[i]"
+        >
+          <option>A/A+</option>
+          <option>A-</option>
+          <option>B+</option>
+          <option>B</option>
+          <option>B-</option>
+          <option>C+</option>
+          <option>C</option>
+          <option>C-</option>
+          <option>D+</option>
+          <option>D</option>
+          <option>D-</option>
+          <option>F</option>
+          <option>P</option>
+        </select>
+      </div>
       <div class="field" v-if="majorObj.numSciTechs > 0">
         <label>Sci Techs: </label>
         <input v-model="sciTechsCompleted" />
         <p>/ {{ majorObj.numSciTechs }}</p>
+      </div>
+      <div class="misc-grades" v-if="sciTechsCompleted > 0">
+        <label>Grade{{ sciTechsCompleted > 1 ? "s" : "" }}:</label>
+        <select
+          v-for="i in Math.min(
+            majorObj.numSciTechs,
+            parseInt(sciTechsCompleted)
+          )"
+          :key="i"
+          v-model="sciTechGrades[i]"
+        >
+          <option>A/A+</option>
+          <option>A-</option>
+          <option>B+</option>
+          <option>B</option>
+          <option>B-</option>
+          <option>C+</option>
+          <option>C</option>
+          <option>C-</option>
+          <option>D+</option>
+          <option>D</option>
+          <option>D-</option>
+          <option>F</option>
+          <option>P</option>
+        </select>
       </div>
     </div>
     <button @click="handleCoursesSubmit">SUBMIT!</button>
@@ -54,20 +126,32 @@
         </div>
         <div class="data-container mid-container">
           <h2>Remaining Courses:</h2>
-          <p>19</p>
+          <p>{{ remainingCourses.length }}</p>
         </div>
         <div class="data-container">
           <h2>Remaining Units:</h2>
-          <p>76</p>
+          <p>{{ units }}</p>
         </div>
       </div>
       <div class="recommended-courses">
         <h2>Recommended Courses:</h2>
-        <div></div>
+        <div>
+          <CourseList
+            :isRecommended="true"
+            :contents="recommendedCourses"
+            :onClick="dummyFunction"
+          />
+        </div>
       </div>
       <div class="remaining-courses">
         <h2>Courses to Take:</h2>
-        <div></div>
+        <div>
+          <CourseList
+            :isRemaining="true"
+            :contents="remainingCourses"
+            :onClick="dummyFunction"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -75,7 +159,6 @@
 
 <script>
 import { mapGetters } from "vuex";
-import Swal from "sweetalert2";
 import axios from "axios";
 import CourseList from "@/components/CourseList";
 
@@ -89,66 +172,66 @@ export default {
   },
   data() {
     return {
+      // Local state info
       majorObj: null,
       courseCatalog: [],
       completedCourses: [],
-      gpa: null,
+      recommendedCourses: [],
+      remainingCourses: [],
+      // Misc course state info
       gesCompleted: 0,
       breadthsCompleted: 0,
       sciTechsCompleted: 0,
+      geGrades: [],
+      techBreadthGrades: [],
+      sciTechGrades: [],
+      // Calculated values
+      gpa: "N/A",
+      units: "N/A",
     };
   },
   methods: {
+    dummyFunction: function () {
+      console.log("lol");
+    },
+    sortCourses: function (i, j) {
+      if (i.name < j.name) return -1;
+      else if (i.name > j.name) return 1;
+      else return 0;
+    },
+    handleCourseSelection(course, isSelect) {
+      // Set source and destination lists
+      let src = isSelect ? this.courseCatalog : this.completedCourses;
+      let dest = !isSelect ? this.courseCatalog : this.completedCourses;
+      // Get index of element
+      const index = src.indexOf(course);
+      // Remove from source
+      if (index > -1) src.splice(index, 1);
+      else console.log("Error in handleCourseSelection in Summary.vue");
+      // Insert destination
+      dest.push(course);
+      // Sort left list if necessary
+      if (!isSelect) this.courseCatalog.sort(this.sortCourses);
+    },
     handleCoursesSubmit: function () {
-      Swal.fire({
-        icon: "error",
-        title: "Oops...",
-        text: "This feature is still under development.",
-      });
-    },
-    handleCourseSelection(course) {
-      // Get index of element
-      const index = this.courseCatalog.indexOf(course);
-      // Error checking
-      if (index > -1)
-        // Remove from left list
-        this.courseCatalog.splice(index, 1);
-      else
-        console.log(
-          "Something went very wrong in handleCourseSelection in Summary.vue"
-        );
-      // Insert into right list and sort
-      this.completedCourses.push(course);
-    },
-    handleCourseDeletion(course) {
-      // Get index of element
-      const index = this.completedCourses.indexOf(course);
-      // Error checking
-      if (index > -1)
-        // Remove from left list
-        this.completedCourses.splice(index, 1);
-      else
-        console.log(
-          "Something went very wrong in handleCourseDeletion in Summary.vue"
-        );
-      // Insert into right list and sort
-      this.courseCatalog.push(course);
-      this.courseCatalog.sort();
+      let lowerDivs = this.majorObj.reqCourses.lowerDivs;
+      // Parse through lower divs and set courses to null if completed
+      for (let i in lowerDivs)
+        if (this.completedCourses.indexOf(lowerDivs[i].name) != -1)
+          this.majorObj.reqCourses.lowerDivs[i] = null;
     },
   },
   created() {
     // Fetch courses
     let uri = "http://localhost:5000/courses";
     axios.get(uri).then((response) => {
-      // Save course info
-      this.courses = response.data;
-      // Map to course catalog
-      this.courseCatalog = this.courses.map((course) => course.name).sort();
+      // Map to course catalog, make sure to sort by name of course
+      this.courseCatalog = response.data.sort(this.sortCourses);
     });
     // Fetch major
     uri = `http://localhost:5000/majors/${this.major}`;
     axios.get(uri).then((response) => {
-      this.majorObj = response.data[0];
+      this.majorObj = response.data;
     });
   },
 };
@@ -232,7 +315,6 @@ export default {
     width: 40%;
     // Spacing
     margin-bottom: 5rem;
-    padding: 2rem;
 
     .field {
       // Flexbox for layout
@@ -241,7 +323,7 @@ export default {
       // Typography
       font-size: $subheader-font;
       // Spacing
-      margin: 1rem;
+      margin: 2rem;
 
       label {
         // Spacing
@@ -263,6 +345,31 @@ export default {
       p {
         // Typography
         font-family: $alt-font;
+      }
+    }
+
+    .misc-grades {
+      // Flexbox for alignment
+      display: flex;
+      justify-content: space-evenly;
+      align-items: center;
+      // Container styling
+      background: lighten(lightgrey, 10);
+      border-top: $line solid $ucla-blue;
+      border-bottom: $line solid $ucla-blue;
+      // Inner spacing
+      padding: 1rem 0;
+
+      label {
+        // Typography
+        font-weight: bold;
+        font-family: $alt-font;
+      }
+
+      select {
+        // Typography
+        font-family: $alt-font;
+        font-size: 1rem;
       }
     }
   }

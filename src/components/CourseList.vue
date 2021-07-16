@@ -1,14 +1,14 @@
 <template>
   <ul v-if="contents.length">
     <li v-for="(content, i) in contents" :key="i">
-      <p>{{ content }}</p>
+      <p>{{ content.name }}</p>
       <i
-        v-if="enableSelect"
+        v-if="isCatalog"
         class="fas fa-check"
         :style="{ color: 'lightgreen' }"
-        @click="onClick(content)"
+        @click="onClick(content, true)"
       ></i>
-      <div v-if="enableDelete">
+      <div v-if="isCompleted">
         <label>Grade:</label>
         <select v-model="grades[i]">
           <option>A/A+</option>
@@ -28,12 +28,12 @@
         <i
           class="far fa-trash-alt"
           :style="{ color: 'red' }"
-          @click="handleDelete(i)"
+          @click="handleDelete(i, false)"
         ></i>
       </div>
-      <i v-if="enableInfo" class="fas fa-paw" :style="{ color: '#2774AE' }"></i>
+      <i v-if="isRecommended || isRemaining" class="fas fa-paw" :style="{ color: '#2774AE' }"></i>
       <i
-        v-if="enableInfo"
+        v-if="isRecommended"
         class="far fa-question-circle"
         :style="{ color: 'grey' }"
       ></i>
@@ -52,15 +52,19 @@ export default {
       type: Array,
       default: [],
     },
-    enableSelect: {
+    isCatalog: {
       type: Boolean,
       default: false,
     },
-    enableDelete: {
+    isCompleted: {
       type: Boolean,
       default: false,
     },
-    enableInfo: {
+    isRecommended: {
+      type: Boolean,
+      default: false,
+    },
+    isRemaining: {
       type: Boolean,
       default: false,
     },
