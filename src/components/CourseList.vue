@@ -72,11 +72,10 @@ export default {
       type: Function,
       required: true,
     },
-  },
-  data() {
-    return {
-      grades: [],
-    };
+    grades: {
+      type: Array,
+      default: null,
+    }
   },
   methods: {
     handleDelete(i) {

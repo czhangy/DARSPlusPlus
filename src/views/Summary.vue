@@ -23,6 +23,7 @@
             :isCompleted="true"
             :contents="completedCourses"
             :onClick="handleCourseSelection"
+            :grades="grades"
           />
         </div>
       </div>
@@ -38,7 +39,7 @@
         <select
           v-for="i in Math.min(majorObj.numGEs, parseInt(gesCompleted))"
           :key="i"
-          v-model="geGrades[i]"
+          v-model="geGrades[i - 1]"
         >
           <option>A/A+</option>
           <option>A-</option>
@@ -55,20 +56,20 @@
           <option>P</option>
         </select>
       </div>
-      <div class="field">
+      <div class="field" v-if="majorObj.numTechBreadths > 0">
         <label>Tech Breadths: </label>
-        <input v-model="breadthsCompleted" />
+        <input v-model="techBreadthsCompleted" />
         <p>/ {{ majorObj.numTechBreadths }}</p>
       </div>
-      <div class="misc-grades" v-if="breadthsCompleted > 0">
-        <label>Grade{{ breadthsCompleted > 1 ? "s" : "" }}:</label>
+      <div class="misc-grades" v-if="techBreadthsCompleted > 0">
+        <label>Grade{{ techBreadthsCompleted > 1 ? "s" : "" }}:</label>
         <select
           v-for="i in Math.min(
             majorObj.numTechBreadths,
-            parseInt(breadthsCompleted)
+            parseInt(techBreadthsCompleted)
           )"
           :key="i"
-          v-model="techBreadthGrades[i]"
+          v-model="techBreadthGrades[i - 1]"
         >
           <option>A/A+</option>
           <option>A-</option>
@@ -98,7 +99,7 @@
             parseInt(sciTechsCompleted)
           )"
           :key="i"
-          v-model="sciTechGrades[i]"
+          v-model="sciTechGrades[i - 1]"
         >
           <option>A/A+</option>
           <option>A-</option>
@@ -126,7 +127,7 @@
         </div>
         <div class="data-container mid-container">
           <h2>Remaining Courses:</h2>
-          <p>{{ remainingCourses.length }}</p>
+          <p>{{ courses }}</p>
         </div>
         <div class="data-container">
           <h2>Remaining Units:</h2>
@@ -178,16 +179,18 @@ export default {
       completedCourses: [],
       recommendedCourses: [],
       remainingCourses: [],
+      grades: [],
       // Misc course state info
       gesCompleted: 0,
-      breadthsCompleted: 0,
+      techBreadthsCompleted: 0,
       sciTechsCompleted: 0,
       geGrades: [],
       techBreadthGrades: [],
       sciTechGrades: [],
       // Calculated values
       gpa: "N/A",
-      units: "N/A",
+      courses: 0,
+      units: 0,
     };
   },
   methods: {
@@ -199,7 +202,27 @@ export default {
       else if (i.name > j.name) return 1;
       else return 0;
     },
-    handleCourseSelection(course, isSelect) {
+    handleFormChecking: function () {
+      // Check for invalid grades
+      for (let i in this.completedCourses)
+        if (this.grades[i] === "" || this.grades[i] == null) return false;
+      for (let i = 0; i < this.gesCompleted; i++)
+        if (this.geGrades[i] === "" || this.geGrades[i] == null) return false;
+      for (let i = 0; i < this.techBreadthsCompleted; i++)
+        if (
+          this.techBreadthsCompleted[i] === "" ||
+          this.techBreadthsCompleted[i] == null
+        )
+          return false;
+      for (let i = 0; i < this.sciTechsCompleted; i++)
+        if (
+          this.sciTechsCompleted[i] === "" ||
+          this.sciTechsCompleted[i] == null
+        )
+          return false;
+      return true;
+    },
+    handleCourseSelection: function (course, isSelect) {
       // Set source and destination lists
       let src = isSelect ? this.courseCatalog : this.completedCourses;
       let dest = !isSelect ? this.courseCatalog : this.completedCourses;
@@ -213,12 +236,95 @@ export default {
       // Sort left list if necessary
       if (!isSelect) this.courseCatalog.sort(this.sortCourses);
     },
-    handleCoursesSubmit: function () {
+    handleCourseChecking: function () {
+      // Reset values
+      this.units = 0;
+      this.remainingCourses = [];
       let lowerDivs = this.majorObj.reqCourses.lowerDivs;
       // Parse through lower divs and set courses to null if completed
-      for (let i in lowerDivs)
-        if (this.completedCourses.indexOf(lowerDivs[i].name) != -1)
+      for (let i in lowerDivs) {
+        if (!lowerDivs[i]) continue;
+        if (
+          this.completedCourses.filter(function (course) {
+            return course._id === lowerDivs[i]._id;
+          }).length > 0
+        )
           this.majorObj.reqCourses.lowerDivs[i] = null;
+        // Add courses that haven't been completed to their proper data sections
+        else {
+          this.remainingCourses.push(lowerDivs[i]);
+          this.units += lowerDivs[i].units;
+        }
+      }
+      this.courses =
+        this.remainingCourses.length +
+        (this.majorObj.numGEs - this.gesCompleted) +
+        (this.majorObj.numTechBreadths - this.techBreadthsCompleted) +
+        (this.majorObj.numSciTechs - this.sciTechsCompleted);
+      this.units +=
+        5 * (this.majorObj.numGEs - this.gesCompleted) +
+        4 * (this.majorObj.numTechBreadths - this.techBreadthsCompleted) +
+        4 * (this.majorObj.numSciTechs - this.sciTechsCompleted);
+    },
+    handleGPACalculation: function () {
+      let units = 0,
+        gradePoints = 0;
+      let gradeMapping = {
+        "A/A+": 4,
+        "A-": 3.7,
+        "B+": 3.3,
+        B: 3,
+        "B-": 2.7,
+        "C+": 2.3,
+        C: 2,
+        "C-": 1.7,
+        "D+": 1.3,
+        D: 1,
+        "D-": 0.7,
+        F: 0,
+      };
+      // Get grade points for major courses, ignoring P grades
+      for (let i in this.completedCourses) {
+        if (this.grades[i] !== "P") {
+          units += this.completedCourses[i].units;
+          gradePoints +=
+            this.completedCourses[i].units * gradeMapping[this.grades[i]];
+        }
+      }
+      // Get grade points for GEs
+      for (let i = 0; i < this.gesCompleted; i++) {
+        if (this.grades[i] !== "P") {
+          units += 5;
+          gradePoints += 5 * gradeMapping[this.geGrades[i]];
+        }
+      }
+      // Get grade points for tech breadths
+      for (let i = 0; i < this.techBreadthsCompleted; i++) {
+        if (this.grades[i] !== "P") {
+          units += 4;
+          gradePoints += 4 * gradeMapping[this.techBreadthGrades[i]];
+        }
+      }
+      // Get grade points for sci techs
+      for (let i = 0; i < this.sciTechsCompleted; i++) {
+        if (this.grades[i] !== "P") {
+          units += 4;
+          gradePoints += 4 * gradeMapping[this.sciTechGrades[i]];
+        }
+      }
+      // Calculate average
+      this.gpa = units === 0 ? "N/A" : (gradePoints / units).toFixed(2);
+    },
+    handleCoursesSubmit: function () {
+      // Check for user errors in the form
+      if (!this.handleFormChecking()) {
+        alert("Fuck you");
+        return;
+      }
+      // Mark courses that have been completed
+      this.handleCourseChecking();
+      // Calculate GPA
+      this.handleGPACalculation();
     },
   },
   created() {
