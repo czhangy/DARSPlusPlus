@@ -5,6 +5,19 @@
       <h1>{{ major }}</h1>
       <hr />
     </div>
+    <p class="summary-subheader">
+      Please select all major-related courses that you have taken, and enter the
+      grade you received below!
+      <br />
+      Other courses, such as GEs, Breadths, Sci. Techs, etc. are handled
+      separately at the bottom.
+      <br />
+      <br />
+      <span
+        >Disclaimer: this information is not saved and the results will only be
+        available to you.</span
+      >
+    </p>
     <div class="courses">
       <div>
         <h2>Course Catalog</h2>
@@ -118,8 +131,8 @@
       </div>
     </div>
     <button @click="handleCoursesSubmit">SUBMIT!</button>
-    <div class="separator" />
-    <div class="data">
+    <div v-if="submitted" class="separator" />
+    <div v-if="submitted" ref="data" class="data">
       <div class="data-headers">
         <div class="data-container">
           <h2>GPA:</h2>
@@ -174,7 +187,6 @@ export default {
   data() {
     return {
       // Local state info
-      majorObj: null,
       courseCatalog: [],
       completedCourses: [],
       recommendedCourses: [],
@@ -191,6 +203,9 @@ export default {
       gpa: "N/A",
       courses: 0,
       units: 0,
+      // Page state
+      majorObj: null,
+      submitted: false,
     };
   },
   methods: {
@@ -233,6 +248,7 @@ export default {
       else console.log("Error in handleCourseSelection in Summary.vue");
       // Insert destination
       dest.push(course);
+      console.log(course.prereqs);
       // Sort left list if necessary
       if (!isSelect) this.courseCatalog.sort(this.sortCourses);
     },
@@ -325,6 +341,8 @@ export default {
       this.handleCourseChecking();
       // Calculate GPA
       this.handleGPACalculation();
+      // Load and scroll to next section
+      this.submitted = true;
     },
   },
   created() {
@@ -383,6 +401,22 @@ export default {
       background: $ucla-blue;
       // Remove default styling
       border: none;
+    }
+  }
+
+  .summary-subheader {
+    // Typography
+    font-family: $alt-font;
+    font-size: $subheader-font;
+    // Centering
+    text-align: center;
+    // Spacing
+    padding: 0 5rem;
+    margin-top: 5rem;
+
+    span {
+      // Typography
+      font-weight: bold;
     }
   }
 

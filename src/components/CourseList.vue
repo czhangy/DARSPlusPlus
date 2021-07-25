@@ -31,12 +31,17 @@
           @click="handleDelete(i, false)"
         ></i>
       </div>
-      <i v-if="isRecommended || isRemaining" class="fas fa-paw" :style="{ color: '#2774AE' }"></i>
-      <i
+      <a v-if="isRecommended || isRemaining" :href="handleBruinwalkLink(content.name)" target="_blank">
+        <i
+          class="fas fa-paw"
+          :style="{ color: '#2774AE' }"
+        ></i>
+      </a>
+      <!-- <i
         v-if="isRecommended"
         class="far fa-question-circle"
         :style="{ color: 'grey' }"
-      ></i>
+      ></i> -->
     </li>
   </ul>
   <div class="empty-text" v-else>
@@ -75,11 +80,11 @@ export default {
     grades: {
       type: Array,
       default: null,
-    }
+    },
   },
   methods: {
-    handleDelete(i) {
-        // Keep grade selections consistent on deletion
+    handleDelete: function (i) {
+      // Keep grade selections consistent on deletion
       while (i + 1 < this.contents.length) {
         this.grades[i] = this.grades[i + 1];
         i++;
@@ -88,6 +93,12 @@ export default {
       this.grades[i] = "";
       this.onClick(this.contents[i]);
     },
+    handleBruinwalkLink: function (course) {
+      // Format course name
+      course = course.replace(/\s+/g, '-').toLowerCase();
+      // Append to base link
+      return `http://bruinwalk.com/classes/${course}`;
+    }
   },
 };
 </script>

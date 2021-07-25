@@ -13,6 +13,7 @@
       <h3>Resume your progress</h3>
       <label>Paste your hash code here:</label>
       <input v-model="hashCode" />
+      <p v-if="hashError">Please enter a valid hash code!</p>
       <button @click="handleHashSubmit">GO!</button>
       <div class="divider">
         <hr />
@@ -23,47 +24,36 @@
       <label>Select your major:</label>
       <select v-model="selectedMajor">
         <option disabled value="">Select your major</option>
-        <option>Aerospace Engineering</option>
-        <option>Bioengineering</option>
-        <option>Chemical Engineering</option>
-        <option>Civil Engineering</option>
-        <option>Computer Engineering</option>
         <option>Computer Science</option>
-        <option>Computer Science and Engineering</option>
-        <option>Electrical Engineering</option>
       </select>
-      <button @click="handleFormSubmit">GO!</button>
+      <p v-if="majorError">Please select a major!</p>
+      <button @click="handleMajorSubmit">GO!</button>
     </div>
   </div>
 </template>
 
 <script>
 import { mapGetters } from "vuex";
-import Swal from "sweetalert2";
 
 export default {
   name: "Home",
   data() {
     return {
       hashCode: "",
+      hashError: false,
+      majorError: false,
     };
   },
   methods: {
     handleHashSubmit: function () {
-      Swal.fire({
-        icon: "error",
-        title: "Oops...",
-        text: "This feature is still under development.",
-      });
+      return;
     },
-    handleFormSubmit: function () {
-      if (this.major == "Testing" || this.major == null)
-        Swal.fire({
-          icon: "error",
-          title: "Oops...",
-          text: "Please select a major to proceed.",
-        });
-      else
+    handleMajorSubmit: function () {
+      // Handle error if no major has been selected
+      if (this.major === "") {
+        this.majorError = true;
+        document.getElementsByTagName("select")[0].style.borderColor = "red";
+      } else
         this.$router
           .push({ path: "summary" })
           .then(() => window.scrollTo(0, 0));
@@ -79,6 +69,10 @@ export default {
         this.$store.commit("setMajor", value);
       },
     },
+  },
+  created() {
+    // Reset global state
+    this.selectedMajor = "";
   },
 };
 </script>
@@ -162,6 +156,16 @@ export default {
       font-family: $alt-font;
       // Inner spacing
       padding: 0.2rem 0.5rem;
+      // Border
+      border: 1px solid black;
+      border-radius: 4px;
+    }
+
+    p {
+      // Typography
+      color: red;
+      // Spacing
+      margin-top: 1rem;
     }
 
     button {
@@ -210,6 +214,9 @@ export default {
       font-family: $alt-font;
       // Inner spacing
       padding: 0.2rem 0.5rem;
+      // Border
+      border: 1px solid black;
+      border-radius: 4px;
     }
   }
 }
