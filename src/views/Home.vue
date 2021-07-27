@@ -103,11 +103,19 @@ export default {
     h1 {
       // Typography
       font-size: $title-font;
+      // Spacing
+      margin: 0 2rem;
+      // Centering
+      text-align: center;
     }
 
     h2 {
       // Typography
       font-size: $header-font;
+      // Spacing
+      margin: 0 2rem;
+      // Centering
+      text-align: center;
     }
 
     button {
@@ -133,7 +141,7 @@ export default {
     flex-direction: column;
     align-items: center;
     // Inner spacing
-    padding: 8rem 0;
+    padding: calc(clamp(4rem, 2.400rem + 6.400vw, 8rem)) 0;
 
     h3 {
       // Typography
@@ -185,7 +193,7 @@ export default {
       justify-content: center;
       align-items: center;
       // Sizing
-      width: 100%;
+      width: 90%;
 
       hr {
         // Sizing
@@ -199,7 +207,7 @@ export default {
 
       span {
         // Spacing
-        margin: 5rem;
+        margin: 5rem calc(clamp(3rem, 2.200rem + 3.200vw, 5rem));
         // Typography
         font-weight: bold;
         font-size: $subheader-font;

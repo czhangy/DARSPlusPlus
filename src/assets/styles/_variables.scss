@@ -4,10 +4,10 @@ $ucla-dark-blue: #003B5C;
 $ucla-gold: #FFD100;
 $ucla-dark-gold: #FFB81C;
 // Font sizes
-$title-font: 4rem;
-$header-font: 2rem;
-$subheader-font: 1.5rem;
-$body-font: 1rem;
+$title-font: calc(clamp(2.8rem, 2.320rem + 1.920vw, 4rem));
+$header-font: calc(clamp(1.4rem, 1.160rem + 0.960vw, 2rem));
+$subheader-font: calc(clamp(1.05rem, 0.870rem + 0.720vw, 1.5rem));
+$body-font: calc(clamp(0.7rem, 0.580rem + 0.480vw, 1rem));
 // Colors
 $box-shadow-color: lighten(#404040, 25);
 $font-color: #333;

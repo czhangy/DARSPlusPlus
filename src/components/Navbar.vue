@@ -2,7 +2,6 @@
   <div class="navbar">
     <router-link to="/">DARS++</router-link>
     <div class="page-links">
-      <router-link to="/faqs">FAQs</router-link>
       <router-link to="/about">About</router-link>
     </div>
   </div>
