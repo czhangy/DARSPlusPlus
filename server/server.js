@@ -29,8 +29,8 @@ mongoose
 // Apply routes
 const coursesRouter = require('./routes/course.route');
 const majorsRouter = require('./routes/major.route')
-app.use('/courses', coursesRouter);
-app.use('/majors', majorsRouter);
+app.use('/api/courses', coursesRouter);
+app.use('/api/majors', majorsRouter);
 
 // Start server
 app.listen(port, () => {

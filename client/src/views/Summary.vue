@@ -347,13 +347,13 @@ export default {
   },
   created() {
     // Fetch courses
-    let uri = "http://localhost:5000/courses";
+    let uri = "/api/courses";
     axios.get(uri).then((response) => {
       // Map to course catalog, make sure to sort by name of course
       this.courseCatalog = response.data.sort(this.sortCourses);
     });
     // Fetch major
-    uri = `http://localhost:5000/majors/${this.major}`;
+    uri = `/api/majors/${this.major}`;
     axios.get(uri).then((response) => {
       this.majorObj = response.data;
     });
