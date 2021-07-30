@@ -26,6 +26,6 @@ exports.findMajor = async (req, res) => {
     return res.status(200).json(major);
   } catch (err) {
     // Send error message
-    console.log("Error: " + err);
+    return res.status(400).json("Error: " + err);
   }
 };
