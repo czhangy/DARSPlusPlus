@@ -9,10 +9,10 @@
     "build": "npm run build --prefix client"
   },
   "dependencies": {
-    "@vue/cli-service": "~4.5.0",
     "@vue/cli-plugin-babel": "~4.5.0",
     "@vue/cli-plugin-router": "~4.5.0",
     "@vue/cli-plugin-vuex": "~4.5.0",
+    "@vue/cli-service": "~4.5.0",
     "@vue/compiler-sfc": "^3.0.0",
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
