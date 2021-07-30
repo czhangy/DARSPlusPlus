@@ -16,8 +16,12 @@ This project is currently under development. All basic logic and functionality i
 
 #### To Do:
 
-- [ ] Collect further data to enable users to access all HSSEAS majors
+- [ ] Implement topological sort for recommended courses
+- [ ] Responsiveness changes
+- [ ] Create loading screens for better UX
+- [ ] Fix scroll behavior
 - [ ] Implement a hash code system to allow users to save their progress
+- [ ] Collect further data to enable users to access all HSSEAS majors
 
 
 
