@@ -9,7 +9,6 @@ require("dotenv").config();
 
 // Init app
 const app = express();
-const port = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
@@ -27,12 +26,21 @@ mongoose
   .catch((err) => console.log(err));
 
 // Apply routes
-const coursesRouter = require('./routes/course.route');
-const majorsRouter = require('./routes/major.route')
-app.use('/api/courses', coursesRouter);
-app.use('/api/majors', majorsRouter);
+const coursesRouter = require("./routes/course.route");
+const majorsRouter = require("./routes/major.route");
+app.use("/api/courses", coursesRouter);
+app.use("/api/majors", majorsRouter);
+
+// Handle production
+if (process.env.NODE_ENV === "production") {
+  // Set static folder
+  app.use(express.static(__dirname + "/public/"));
+  // Handle SPA routing
+  app.get(/.*/, (req, res) => res.sendFile(__dirname + "/public/index.html"));
+}
 
 // Start server
+const port = process.env.PORT || 5000;
 app.listen(port, () => {
   console.log(`Server is running on port: ${port}`);
 });
