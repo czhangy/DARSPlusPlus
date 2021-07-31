@@ -13,36 +13,40 @@ const majorSchema = new Schema({
     unique: true,
   },
   reqCourses: {
-      type: Object,
-      default: {},
+    type: Object,
+    default: {},
+  },
+  labels: {
+    type: Array,
+    default: [],
   },
   numGEs: {
-      type: Number,
-      default: 5,
+    type: Number,
+    default: 5,
   },
   numTechBreadths: {
-      type: Number,
-      default: 3,
+    type: Number,
+    default: 3,
   },
   numSciTechs: {
-      type: Number,
-      default: 0,
+    type: Number,
+    default: 0,
   },
   numWritings: {
-      type: Number,
-      default: 1,
+    type: Number,
+    default: 1,
   },
   numLangs: {
-      type: Number,
-      default: 0,
+    type: Number,
+    default: 0,
   },
   numEthics: {
-      type: Number,
-      default: 1,
+    type: Number,
+    default: 1,
   },
   numElectives: {
-      type: Number,
-      default: 5,
+    type: Number,
+    default: 5,
   },
 });
 

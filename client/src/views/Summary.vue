@@ -130,6 +130,9 @@
         </select>
       </div>
     </div>
+    <p class="error-message" v-if="gradeError">
+      Please ensure all grades are entered properly!
+    </p>
     <button @click="handleCoursesSubmit">SUBMIT!</button>
     <div v-if="submitted" class="separator" />
     <div v-if="submitted" ref="data" class="data">
@@ -147,33 +150,33 @@
           <p>{{ units }}</p>
         </div>
       </div>
-      <div class="recommended-courses">
+      <div class="data-courses">
         <h2>Recommended Courses:</h2>
-        <div>
-          <CourseList
-            :isRecommended="true"
-            :contents="recommendedCourses"
-            :onClick="dummyFunction"
-          />
+        <div class="data-course-list">
+          <CourseList :isRecommended="true" :contents="recommendedCourses" />
         </div>
       </div>
-      <div class="remaining-courses">
+      <div class="data-courses">
         <h2>Courses to Take:</h2>
-        <div>
-          <CourseList
-            :isRemaining="true"
-            :contents="remainingCourses"
-            :onClick="dummyFunction"
-          />
+        <div class="data-course-list">
+          <CourseList :isRemaining="true" :contents="remainingCourses" />
         </div>
       </div>
     </div>
   </div>
+  <div class="loading-screen" v-else>
+    <img src="@/assets/img/Summary/loading.gif" alt="" />
+    <p class="loading-header">LOADING</p>
+    <p class="loading-subheader">This may take up to 30 seconds</p>
+  </div>
 </template>
 
 <script>
+// Import global libraries
 import { mapGetters } from "vuex";
 import axios from "axios";
+
+// Import local components
 import CourseList from "@/components/CourseList";
 
 export default {
@@ -196,6 +199,7 @@ export default {
       gesCompleted: 0,
       techBreadthsCompleted: 0,
       sciTechsCompleted: 0,
+      electivesCompleted: 0,
       geGrades: [],
       techBreadthGrades: [],
       sciTechGrades: [],
@@ -206,36 +210,15 @@ export default {
       // Page state
       majorObj: null,
       submitted: false,
+      // Form handling
+      gradeError: false,
     };
   },
   methods: {
-    dummyFunction: function () {
-      console.log("lol");
-    },
     sortCourses: function (i, j) {
       if (i.name < j.name) return -1;
       else if (i.name > j.name) return 1;
       else return 0;
-    },
-    handleFormChecking: function () {
-      // Check for invalid grades
-      for (let i in this.completedCourses)
-        if (this.grades[i] === "" || this.grades[i] == null) return false;
-      for (let i = 0; i < this.gesCompleted; i++)
-        if (this.geGrades[i] === "" || this.geGrades[i] == null) return false;
-      for (let i = 0; i < this.techBreadthsCompleted; i++)
-        if (
-          this.techBreadthsCompleted[i] === "" ||
-          this.techBreadthsCompleted[i] == null
-        )
-          return false;
-      for (let i = 0; i < this.sciTechsCompleted; i++)
-        if (
-          this.sciTechsCompleted[i] === "" ||
-          this.sciTechsCompleted[i] == null
-        )
-          return false;
-      return true;
     },
     handleCourseSelection: function (course, isSelect) {
       // Set source and destination lists
@@ -248,39 +231,138 @@ export default {
       else console.log("Error in handleCourseSelection in Summary.vue");
       // Insert destination
       dest.push(course);
-      console.log(course.prereqs);
       // Sort left list if necessary
       if (!isSelect) this.courseCatalog.sort(this.sortCourses);
+    },
+    handleCoursesSubmit: function () {
+      // Check for user errors in the form
+      if (!this.handleFormChecking()) {
+        this.gradeError = true;
+        this.submitted = false;
+        return;
+      }
+      // Mark courses that have been completed
+      this.handleCourseChecking();
+      // Calculate GPA
+      this.handleGPACalculation();
+      // Load and scroll to next section
+      this.submitted = true;
+    },
+    handleFormChecking: function () {
+      // Check for invalid grades
+      for (let i in this.completedCourses)
+        if (this.grades[i] === "" || this.grades[i] == null) return false;
+      for (let i in this.gesCompleted)
+        if (this.geGrades[i] === "" || this.geGrades[i] == null) return false;
+      for (let i in this.techBreadthsCompleted)
+        if (
+          this.techBreadthGrades[i] === "" ||
+          this.techBreadthGrades[i] == null
+        )
+          return false;
+      for (let i in this.sciTechsCompleted)
+        if (this.sciTechGrades[i] === "" || this.sciTechGrades[i] == null)
+          return false;
+      return true;
     },
     handleCourseChecking: function () {
       // Reset values
       this.units = 0;
       this.remainingCourses = [];
-      let lowerDivs = this.majorObj.reqCourses.lowerDivs;
-      // Parse through lower divs and set courses to null if completed
-      for (let i in lowerDivs) {
-        if (!lowerDivs[i]) continue;
-        if (
-          this.completedCourses.filter(function (course) {
-            return course._id === lowerDivs[i]._id;
-          }).length > 0
-        )
-          this.majorObj.reqCourses.lowerDivs[i] = null;
-        // Add courses that haven't been completed to their proper data sections
-        else {
-          this.remainingCourses.push(lowerDivs[i]);
-          this.units += lowerDivs[i].units;
+      // Get copy of reqCourses
+      let reqCourses = this.majorObj.reqCourses;
+      for (let label of this.majorObj.labels) {
+        if (label === "electives") {
+          this.handleElectiveChecking(reqCourses);
+          continue;
+        }
+        for (let i = 0; i < reqCourses[label].length; i++) {
+          if (!reqCourses[label][i]) continue;
+          // Handle requirements satisfied by multiple courses
+          if (Array.isArray(reqCourses[label][i])) {
+            let complete = false;
+            for (let j = 0; j < reqCourses[label][i].length; j++) {
+              // Set requirement to complete
+              if (
+                this.completedCourses.filter(function (course) {
+                  return course._id === reqCourses[label][i][j]._id;
+                }).length > 0
+              ) {
+                complete = true;
+                reqCourses[label][i] = null;
+                break;
+              }
+            }
+            if (!complete) {
+              for (let j = 0; j < reqCourses[label][i].length; j++)
+                this.remainingCourses.push(reqCourses[label][i][j]);
+              this.units += reqCourses[label][i][0].units;
+            }
+            // Handle regular courses
+          } else {
+            // Set course to complete
+            if (
+              this.completedCourses.filter(function (course) {
+                return course._id === reqCourses[label][i]._id;
+              }).length > 0
+            )
+              reqCourses[label][i] = null;
+            // Set course as incomplete
+            else {
+              this.remainingCourses.push(reqCourses[label][i]);
+              this.units += reqCourses[label][i].units;
+            }
+          }
         }
       }
-      this.courses =
-        this.remainingCourses.length +
-        (this.majorObj.numGEs - this.gesCompleted) +
-        (this.majorObj.numTechBreadths - this.techBreadthsCompleted) +
-        (this.majorObj.numSciTechs - this.sciTechsCompleted);
+      // Count remaining courses
+      this.handleNumCourses(reqCourses);
+      // Account for misc. units
       this.units +=
         5 * (this.majorObj.numGEs - this.gesCompleted) +
         4 * (this.majorObj.numTechBreadths - this.techBreadthsCompleted) +
-        4 * (this.majorObj.numSciTechs - this.sciTechsCompleted);
+        4 * (this.majorObj.numSciTechs - this.sciTechsCompleted) +
+        4 * (this.majorObj.numElectives - this.electivesCompleted);
+      // Sort resultant arrays
+      this.remainingCourses.sort(this.sortCourses);
+    },
+    handleElectiveChecking: function (reqCourses) {
+      this.electivesCompleted = 0;
+      for (let i = 0; i < reqCourses.electives.length; i++)
+        // Mark electives as completed
+        if (
+          this.completedCourses.filter(function (course) {
+            return course._id === reqCourses.elective[i]._id;
+          }).length > 0
+        ) {
+          this.electivesCompleted++;
+          reqCourses.elective[i] = null;
+          if (this.electivesCompleted === this.majorObj.numElectives) break;
+        }
+      // If elective req is done
+      if (this.electivesCompleted === this.majorObj.numElectives)
+        reqCourses.electives = null;
+      else
+        for (let i = 0; i < reqCourses.electives.length; i++)
+          if (reqCourses.electives[i] !== null)
+            this.remainingCourses.push(reqCourses.electives[i]);
+    },
+    handleNumCourses: function (reqCourses) {
+      // Zero this value out
+      this.courses = 0;
+      // Count number of reqs left unsatisfied
+      for (let label of this.majorObj.labels) {
+        // Electives are handled separately
+        if (label === "electives") continue;
+        for (let req of reqCourses[label]) if (req != null) this.courses++;
+      }
+      // Account for misc. courses
+      this.courses +=
+        this.majorObj.numGEs -
+        this.gesCompleted +
+        (this.majorObj.numTechBreadths - this.techBreadthsCompleted) +
+        (this.majorObj.numSciTechs - this.sciTechsCompleted) +
+        (this.majorObj.numElectives - this.electivesCompleted);
     },
     handleGPACalculation: function () {
       let units = 0,
@@ -330,19 +412,6 @@ export default {
       }
       // Calculate average
       this.gpa = units === 0 ? "N/A" : (gradePoints / units).toFixed(2);
-    },
-    handleCoursesSubmit: function () {
-      // Check for user errors in the form
-      if (!this.handleFormChecking()) {
-        alert("Fuck you");
-        return;
-      }
-      // Mark courses that have been completed
-      this.handleCourseChecking();
-      // Calculate GPA
-      this.handleGPACalculation();
-      // Load and scroll to next section
-      this.submitted = true;
     },
   },
   created() {
@@ -514,6 +583,14 @@ export default {
     }
   }
 
+  .error-message {
+    // Typography
+    color: red;
+    font-family: $alt-font;
+    // Spacing
+    margin-bottom: 1rem;
+  }
+
   button {
     // Inner spacing
     padding: 1rem 2rem;
@@ -567,33 +644,45 @@ export default {
       }
     }
 
-    .recommended-courses {
+    .data-courses {
       // Spacing
       margin: 3rem 0;
 
-      div {
-        // Sizing
-        width: 100%;
-        height: 10rem;
-        // Container
-        border: $line solid $ucla-blue;
-        overflow-y: scroll;
-      }
-    }
-
-    .remaining-courses {
-      // Spacing
-      margin: 3rem 0;
-
-      div {
+      .data-course-list {
         // Sizing
         width: 100%;
         height: 20rem;
         // Container
         border: $line solid $ucla-blue;
         overflow-y: scroll;
+        // Background
+        background: $ucla-blue;
       }
     }
+  }
+}
+
+.loading-screen {
+  // Sizing
+  height: calc(100vh - 220px);
+  width: 100%;
+  // Flexbox for centering
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  .loading-header {
+    // Typography
+    font-size: $title-font;
+    // Spacing
+    margin-top: 2rem;
+  }
+
+  .loading-subheader {
+    // Typography
+    font-size: $header-font;
+    font-family: $alt-font;
   }
 }
 </style>

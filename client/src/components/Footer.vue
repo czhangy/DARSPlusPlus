@@ -7,7 +7,7 @@
       <a href="https://vuejs.org/" target="_blank">Vue</a> |
       <a href="https://expressjs.com/" target="_blank">Express</a> |
       <a href="https://www.mongodb.com/" target="_blank">MongoDB</a> |
-      <a href="https://www.netlify.com/" target="_blank">Netlify</a>
+      <a href="https://www.heroku.com/" target="_blank">Heroku</a>
     </div>
   </div>
 </template>

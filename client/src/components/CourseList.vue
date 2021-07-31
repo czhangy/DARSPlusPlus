@@ -1,51 +1,54 @@
 <template>
-  <ul v-if="contents.length">
-    <li v-for="(content, i) in contents" :key="i">
-      <p>{{ content.name }}</p>
-      <i
-        v-if="isCatalog"
-        class="fas fa-check"
-        :style="{ color: 'lightgreen' }"
-        @click="onClick(content, true)"
-      ></i>
-      <div v-if="isCompleted">
-        <label>Grade:</label>
-        <select v-model="grades[i]">
-          <option>A/A+</option>
-          <option>A-</option>
-          <option>B+</option>
-          <option>B</option>
-          <option>B-</option>
-          <option>C+</option>
-          <option>C</option>
-          <option>C-</option>
-          <option>D+</option>
-          <option>D</option>
-          <option>D-</option>
-          <option>F</option>
-          <option>P</option>
-        </select>
+  <div class="course-list">
+    <ul v-if="contents.length > 0">
+      <li v-for="(content, i) in contents" :key="i">
+        <p>{{ content.name }}</p>
         <i
-          class="far fa-trash-alt"
-          :style="{ color: 'red' }"
-          @click="handleDelete(i, false)"
+          v-if="isCatalog"
+          class="fas fa-check"
+          :style="{ color: 'lightgreen' }"
+          @click="onClick(content, true)"
         ></i>
-      </div>
-      <a v-if="isRecommended || isRemaining" :href="handleBruinwalkLink(content.name)" target="_blank">
-        <i
-          class="fas fa-paw"
-          :style="{ color: '#2774AE' }"
-        ></i>
-      </a>
-      <!-- <i
+        <div v-if="isCompleted">
+          <label>Grade:</label>
+          <select v-model="grades[i]">
+            <option>A/A+</option>
+            <option>A-</option>
+            <option>B+</option>
+            <option>B</option>
+            <option>B-</option>
+            <option>C+</option>
+            <option>C</option>
+            <option>C-</option>
+            <option>D+</option>
+            <option>D</option>
+            <option>D-</option>
+            <option>F</option>
+            <option>P</option>
+          </select>
+          <i
+            class="far fa-trash-alt"
+            :style="{ color: 'red' }"
+            @click="handleDelete(i, false)"
+          ></i>
+        </div>
+        <a
+          v-if="isRecommended || isRemaining"
+          :href="handleBruinwalkLink(content.name)"
+          target="_blank"
+        >
+          <i class="fas fa-paw" :style="{ color: '#2774AE' }"></i>
+        </a>
+        <!-- <i
         v-if="isRecommended"
         class="far fa-question-circle"
         :style="{ color: 'grey' }"
       ></i> -->
-    </li>
-  </ul>
-  <div class="empty-text" v-else>
-    <p>Nothing to see here!</p>
+      </li>
+    </ul>
+    <div class="empty-text" v-else>
+      <p>Nothing to see here!</p>
+    </div>
   </div>
 </template>
 
@@ -75,7 +78,6 @@ export default {
     },
     onClick: {
       type: Function,
-      required: true,
     },
     grades: {
       type: Array,
@@ -94,89 +96,96 @@ export default {
       this.onClick(this.contents[i]);
     },
     handleBruinwalkLink: function (course) {
-      // Format course name
-      course = course.replace(/\s+/g, '-').toLowerCase();
+      // Format course name to Bruinwalk URL format
+      course = course.replace(/\s+|&/g, "-").toLowerCase();
       // Append to base link
       return `http://bruinwalk.com/classes/${course}`;
-    }
+    },
+  },
+  created() {
+    console.log(this.contents);
   },
 };
 </script>
 
 <style lang="scss" scoped>
-ul {
-  // Sizing
-  width: 100%;
-  // Typography
-  font-family: $alt-font;
-  font-weight: bold;
+.course-list {
+  height: 100%;
 
-  li {
-    // Flexbox for layout
+  ul {
+    // Sizing
+    width: 100%;
+    // Typography
+    font-family: $alt-font;
+    font-weight: bold;
+
+    li {
+      // Flexbox for layout
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      // Inner spacing
+      padding: 2rem;
+      // Separator
+      border-bottom: $line solid $ucla-blue;
+      // Background
+      background: white;
+
+      p {
+        // Typography
+        font-size: $header-font;
+        // Spacing
+        margin-right: 2rem;
+      }
+
+      div {
+        // Flexbox for layout
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        select {
+          // Spacing
+          margin-left: 1rem;
+          margin-right: 2rem;
+          // Sizing
+          width: 4rem;
+          // Tpography
+          font-size: $body-font;
+          font-family: $alt-font;
+        }
+      }
+
+      .fa,
+      .far,
+      .fas {
+        // Sizing
+        font-size: 2rem;
+        // Clickable
+        cursor: pointer;
+      }
+    }
+  }
+
+  .empty-text {
+    // Flexbox for centering
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
+    // Take up container to center vertically
+    height: 100%;
     // Inner spacing
-    padding: 2rem;
-    // Separator
-    border-bottom: $line solid $ucla-blue;
-    // Background
-    background: white;
+    padding: 5rem;
 
     p {
       // Typography
-      font-size: $header-font;
-      // Spacing
-      margin-right: 2rem;
+      font-family: $alt-font;
+      font-size: $title-font;
+      font-weight: bold;
+      color: white;
+      // Centering
+      text-align: center;
     }
-
-    div {
-      // Flexbox for layout
-      display: flex;
-      justify-content: center;
-      align-items: center;
-
-      select {
-        // Spacing
-        margin-left: 1rem;
-        margin-right: 2rem;
-        // Sizing
-        width: 4rem;
-        // Tpography
-        font-size: $body-font;
-        font-family: $alt-font;
-      }
-    }
-
-    .fa,
-    .far,
-    .fas {
-      // Sizing
-      font-size: 2rem;
-      // Clickable
-      cursor: pointer;
-    }
-  }
-}
-
-.empty-text {
-  // Flexbox for centering
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  // Take up container to center vertically
-  height: 100%;
-  // Inner spacing
-  padding: 5rem;
-
-  p {
-    // Typography
-    font-family: $alt-font;
-    font-size: $title-font;
-    font-weight: bold;
-    color: white;
-    // Centering
-    text-align: center;
   }
 }
 

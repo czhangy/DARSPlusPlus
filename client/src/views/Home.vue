@@ -13,7 +13,7 @@
       <h3>Resume your progress</h3>
       <label>Paste your hash code here:</label>
       <input v-model="hashCode" />
-      <p v-if="hashError">Please enter a valid hash code!</p>
+      <p v-if="hashError">Sorry, this feature has not been implemented yet</p>
       <button @click="handleHashSubmit">GO!</button>
       <div class="divider">
         <hr />
@@ -24,7 +24,7 @@
       <label>Select your major:</label>
       <select v-model="selectedMajor">
         <option disabled value="">Select your major</option>
-        <option>Computer Science</option>
+        <option v-for="(major, i) in majorList" :key="i">{{ major }}</option>
       </select>
       <p v-if="majorError">Please select a major!</p>
       <button @click="handleMajorSubmit">GO!</button>
@@ -33,7 +33,9 @@
 </template>
 
 <script>
+// Import global libraries
 import { mapGetters } from "vuex";
+import axios from "axios";
 
 export default {
   name: "Home",
@@ -42,11 +44,12 @@ export default {
       hashCode: "",
       hashError: false,
       majorError: false,
+      majorList: [],
     };
   },
   methods: {
     handleHashSubmit: function () {
-      return;
+      this.hashError = true;
     },
     handleMajorSubmit: function () {
       // Handle error if no major has been selected
@@ -73,12 +76,18 @@ export default {
   created() {
     // Reset global state
     this.selectedMajor = "";
+    // Get major listings
+    let uri = "/api/majors";
+    axios.get(uri).then((response) => {
+      this.majorList = response.data.map((major) => major.name).sort();
+    });
   },
 };
 </script>
 
 <style lang="scss" scoped>
 .home {
+
   .landing-page {
     // Set background image
     background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
@@ -141,7 +150,7 @@ export default {
     flex-direction: column;
     align-items: center;
     // Inner spacing
-    padding: calc(clamp(4rem, 2.400rem + 6.400vw, 8rem)) 0;
+    padding: calc(clamp(4rem, 2.4rem + 6.4vw, 8rem)) 0;
 
     h3 {
       // Typography
@@ -207,7 +216,7 @@ export default {
 
       span {
         // Spacing
-        margin: 5rem calc(clamp(3rem, 2.200rem + 3.200vw, 5rem));
+        margin: 5rem calc(clamp(3rem, 2.2rem + 3.2vw, 5rem));
         // Typography
         font-weight: bold;
         font-size: $subheader-font;
