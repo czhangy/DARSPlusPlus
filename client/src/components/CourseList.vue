@@ -102,9 +102,6 @@ export default {
       return `http://bruinwalk.com/classes/${course}`;
     },
   },
-  created() {
-    console.log(this.contents);
-  },
 };
 </script>
 

@@ -54,19 +54,9 @@
           :key="i"
           v-model="geGrades[i - 1]"
         >
-          <option>A/A+</option>
-          <option>A-</option>
-          <option>B+</option>
-          <option>B</option>
-          <option>B-</option>
-          <option>C+</option>
-          <option>C</option>
-          <option>C-</option>
-          <option>D+</option>
-          <option>D</option>
-          <option>D-</option>
-          <option>F</option>
-          <option>P</option>
+          <option v-for="(grade, i) of gradeLabels" :key="i">
+            {{ grade }}
+          </option>
         </select>
       </div>
       <div class="field" v-if="majorObj.numTechBreadths > 0">
@@ -84,19 +74,9 @@
           :key="i"
           v-model="techBreadthGrades[i - 1]"
         >
-          <option>A/A+</option>
-          <option>A-</option>
-          <option>B+</option>
-          <option>B</option>
-          <option>B-</option>
-          <option>C+</option>
-          <option>C</option>
-          <option>C-</option>
-          <option>D+</option>
-          <option>D</option>
-          <option>D-</option>
-          <option>F</option>
-          <option>P</option>
+          <option v-for="(grade, i) of gradeLabels" :key="i">
+            {{ grade }}
+          </option>
         </select>
       </div>
       <div class="field" v-if="majorObj.numSciTechs > 0">
@@ -114,19 +94,9 @@
           :key="i"
           v-model="sciTechGrades[i - 1]"
         >
-          <option>A/A+</option>
-          <option>A-</option>
-          <option>B+</option>
-          <option>B</option>
-          <option>B-</option>
-          <option>C+</option>
-          <option>C</option>
-          <option>C-</option>
-          <option>D+</option>
-          <option>D</option>
-          <option>D-</option>
-          <option>F</option>
-          <option>P</option>
+          <option v-for="(grade, i) of gradeLabels" :key="i">
+            {{ grade }}
+          </option>
         </select>
       </div>
     </div>
@@ -194,6 +164,7 @@ export default {
       completedCourses: [],
       recommendedCourses: [],
       remainingCourses: [],
+      reqCourses: null,
       grades: [],
       // Misc course state info
       gesCompleted: 0,
@@ -212,12 +183,32 @@ export default {
       submitted: false,
       // Form handling
       gradeError: false,
+      // Preset value
+      gradeLabels: [
+        "A/A+",
+        "A-",
+        "B+",
+        "B",
+        "B-",
+        "C+",
+        "C",
+        "C-",
+        "D+",
+        "D-",
+        "F",
+        "P",
+      ],
     };
   },
   methods: {
     sortCourses: function (i, j) {
       if (i.name < j.name) return -1;
       else if (i.name > j.name) return 1;
+      else return 0;
+    },
+    sortRecommendedCourses: function (i, j) {
+      if (i.reqFor.length > j.reqFor.length) return -1;
+      else if (i.reqFor.length < j.reqFor.length) return 1;
       else return 0;
     },
     handleCourseSelection: function (course, isSelect) {
@@ -241,10 +232,12 @@ export default {
         this.submitted = false;
         return;
       }
-      // Mark courses that have been completed
-      this.handleCourseChecking();
+      // Remove existing errors
+      this.gradeError = false;
       // Calculate GPA
       this.handleGPACalculation();
+      // Mark courses that have been completed
+      this.handleCourseChecking();
       // Load and scroll to next section
       this.submitted = true;
     },
@@ -265,105 +258,6 @@ export default {
           return false;
       return true;
     },
-    handleCourseChecking: function () {
-      // Reset values
-      this.units = 0;
-      this.remainingCourses = [];
-      // Get copy of reqCourses
-      let reqCourses = this.majorObj.reqCourses;
-      for (let label of this.majorObj.labels) {
-        if (label === "electives") {
-          this.handleElectiveChecking(reqCourses);
-          continue;
-        }
-        for (let i = 0; i < reqCourses[label].length; i++) {
-          if (!reqCourses[label][i]) continue;
-          // Handle requirements satisfied by multiple courses
-          if (Array.isArray(reqCourses[label][i])) {
-            let complete = false;
-            for (let j = 0; j < reqCourses[label][i].length; j++) {
-              // Set requirement to complete
-              if (
-                this.completedCourses.filter(function (course) {
-                  return course._id === reqCourses[label][i][j]._id;
-                }).length > 0
-              ) {
-                complete = true;
-                reqCourses[label][i] = null;
-                break;
-              }
-            }
-            if (!complete) {
-              for (let j = 0; j < reqCourses[label][i].length; j++)
-                this.remainingCourses.push(reqCourses[label][i][j]);
-              this.units += reqCourses[label][i][0].units;
-            }
-            // Handle regular courses
-          } else {
-            // Set course to complete
-            if (
-              this.completedCourses.filter(function (course) {
-                return course._id === reqCourses[label][i]._id;
-              }).length > 0
-            )
-              reqCourses[label][i] = null;
-            // Set course as incomplete
-            else {
-              this.remainingCourses.push(reqCourses[label][i]);
-              this.units += reqCourses[label][i].units;
-            }
-          }
-        }
-      }
-      // Count remaining courses
-      this.handleNumCourses(reqCourses);
-      // Account for misc. units
-      this.units +=
-        5 * (this.majorObj.numGEs - this.gesCompleted) +
-        4 * (this.majorObj.numTechBreadths - this.techBreadthsCompleted) +
-        4 * (this.majorObj.numSciTechs - this.sciTechsCompleted) +
-        4 * (this.majorObj.numElectives - this.electivesCompleted);
-      // Sort resultant arrays
-      this.remainingCourses.sort(this.sortCourses);
-    },
-    handleElectiveChecking: function (reqCourses) {
-      this.electivesCompleted = 0;
-      for (let i = 0; i < reqCourses.electives.length; i++)
-        // Mark electives as completed
-        if (
-          this.completedCourses.filter(function (course) {
-            return course._id === reqCourses.elective[i]._id;
-          }).length > 0
-        ) {
-          this.electivesCompleted++;
-          reqCourses.elective[i] = null;
-          if (this.electivesCompleted === this.majorObj.numElectives) break;
-        }
-      // If elective req is done
-      if (this.electivesCompleted === this.majorObj.numElectives)
-        reqCourses.electives = null;
-      else
-        for (let i = 0; i < reqCourses.electives.length; i++)
-          if (reqCourses.electives[i] !== null)
-            this.remainingCourses.push(reqCourses.electives[i]);
-    },
-    handleNumCourses: function (reqCourses) {
-      // Zero this value out
-      this.courses = 0;
-      // Count number of reqs left unsatisfied
-      for (let label of this.majorObj.labels) {
-        // Electives are handled separately
-        if (label === "electives") continue;
-        for (let req of reqCourses[label]) if (req != null) this.courses++;
-      }
-      // Account for misc. courses
-      this.courses +=
-        this.majorObj.numGEs -
-        this.gesCompleted +
-        (this.majorObj.numTechBreadths - this.techBreadthsCompleted) +
-        (this.majorObj.numSciTechs - this.sciTechsCompleted) +
-        (this.majorObj.numElectives - this.electivesCompleted);
-    },
     handleGPACalculation: function () {
       let units = 0,
         gradePoints = 0;
@@ -382,39 +276,257 @@ export default {
         F: 0,
       };
       // Get grade points for major courses, ignoring P grades
-      for (let i in this.completedCourses) {
+      for (let i in this.completedCourses)
         if (this.grades[i] !== "P") {
           units += this.completedCourses[i].units;
           gradePoints +=
             this.completedCourses[i].units * gradeMapping[this.grades[i]];
         }
-      }
       // Get grade points for GEs
-      for (let i = 0; i < this.gesCompleted; i++) {
-        if (this.grades[i] !== "P") {
+      for (let i in this.gesCompleted)
+        if (this.geGrades[i] !== "P") {
           units += 5;
           gradePoints += 5 * gradeMapping[this.geGrades[i]];
         }
-      }
       // Get grade points for tech breadths
-      for (let i = 0; i < this.techBreadthsCompleted; i++) {
-        if (this.grades[i] !== "P") {
+      for (let i in this.techBreadthsCompleted)
+        if (this.techBreadthGrades[i] !== "P") {
           units += 4;
           gradePoints += 4 * gradeMapping[this.techBreadthGrades[i]];
         }
-      }
       // Get grade points for sci techs
-      for (let i = 0; i < this.sciTechsCompleted; i++) {
-        if (this.grades[i] !== "P") {
+      for (let i in this.sciTechsCompleted)
+        if (this.sciTechGrades[i] !== "P") {
           units += 4;
           gradePoints += 4 * gradeMapping[this.sciTechGrades[i]];
         }
-      }
       // Calculate average
       this.gpa = units === 0 ? "N/A" : (gradePoints / units).toFixed(2);
     },
+    handleCourseChecking: function () {
+      // Establish self
+      const self = this;
+      // Reset values
+      this.units = 0;
+      this.remainingCourses = [];
+      // Get copy of reqCourses
+      this.reqCourses = this.handleDeepCopy(this.majorObj.reqCourses);
+      for (let label of this.majorObj.labels) {
+        if (label === "electives") {
+          this.handleElectiveChecking(this.reqCourses);
+          continue;
+        }
+        for (let i in this.reqCourses[label]) {
+          if (this.reqCourses[label][i] === null) continue;
+          // Handle requirements satisfied by multiple courses
+          if (Array.isArray(this.reqCourses[label][i])) {
+            let complete = false;
+            // Set requirement to complete
+            for (let j in this.reqCourses[label][i])
+              if (
+                this.completedCourses.filter(function (course) {
+                  return course._id === self.reqCourses[label][i][j]._id;
+                }).length > 0
+              ) {
+                complete = true;
+                this.handleTopoSort(this.reqCourses[label][i][j]);
+                this.reqCourses[label][i] = null;
+                break;
+              }
+            // Handle incomplete reqs
+            if (!complete) {
+              for (let option of this.reqCourses[label][i])
+                this.remainingCourses.push(option);
+              this.units += this.reqCourses[label][i][0].units;
+            }
+            // Handle regular courses
+          } else {
+            // Set course to complete
+            if (
+              this.completedCourses.filter(function (course) {
+                return course._id === self.reqCourses[label][i]._id;
+              }).length > 0
+            ) {
+              this.handleTopoSort(this.reqCourses[label][i]);
+              this.reqCourses[label][i] = null;
+              // Set course as incomplete
+            } else {
+              this.remainingCourses.push(this.reqCourses[label][i]);
+              this.units += this.reqCourses[label][i].units;
+            }
+          }
+        }
+      }
+      // Count remaining courses
+      this.handleNumCourses();
+      // Set recommended courses
+      this.handleRecommendedCourses();
+      // Account for misc. units
+      this.units +=
+        5 * (this.majorObj.numGEs - this.gesCompleted) +
+        4 * (this.majorObj.numTechBreadths - this.techBreadthsCompleted) +
+        4 * (this.majorObj.numSciTechs - this.sciTechsCompleted) +
+        4 * (this.majorObj.numElectives - this.electivesCompleted);
+      // Sort resultant array
+      this.remainingCourses.sort(this.sortCourses);
+    },
+    // Helper functions
+    handleDeepCopy: function (obj) {
+      let deepCopy = Array.isArray(obj) ? [] : {};
+      // Handle edge case --> don't iterate over strings
+      if (typeof obj == "string") return obj;
+      // Iterate through object fields
+      for (let i in obj) {
+        // Field is an array
+        if (obj[i] != null && Array.isArray(obj[i])) {
+          let arr = [];
+          for (let j in obj[i]) arr.push(this.handleDeepCopy(obj[i][j]));
+          deepCopy[i] = arr;
+          // If field contains an object, recursive call
+        } else if (obj[i] != null && typeof obj[i] === "object")
+          deepCopy[i] = this.handleDeepCopy(obj[i]);
+        // Primitives can be copied using =
+        else deepCopy[i] = obj[i];
+      }
+      return deepCopy;
+    },
+    handleTopoSort: function (course) {
+      // Iterate through the courses that course is a prereq for (course.reqFor) to remove indegrees
+      for (let courseName of course.reqFor) {
+        // Set flag
+        let flag = true;
+        // Iterate through the course types
+        for (let label of this.majorObj.labels) {
+          // Check flag
+          if (!flag) break;
+          // Iterate through an individual course type
+          for (let i in this.reqCourses[label]) {
+            // Ignore completed courses
+            if (this.reqCourses[label][i] === null) continue;
+            // For individual courses
+            else if (!Array.isArray(this.reqCourses[label][i])) {
+              if (this.reqCourses[label][i].name === courseName) {
+                let ind = -1;
+                // Iterate through prereqs to get target index
+                for (let j in this.reqCourses[label][i].prereqs) {
+                  if (ind !== -1) break;
+                  // Handle normal case
+                  if (!Array.isArray(this.reqCourses[label][i].prereqs[j])) {
+                    if (this.reqCourses[label][i].prereqs[j] === course.name)
+                      ind = j;
+                    // Handle array edge case
+                  } else {
+                    for (let prereq of this.reqCourses[label][i].prereqs[j])
+                      if (prereq === course.name) ind = j;
+                  }
+                }
+                // Error checking
+                if (ind > -1)
+                  // Remove element from array
+                  this.reqCourses[label][i].prereqs.splice(ind, 1);
+                else
+                  console.log(
+                    `Something went wrong: ${course.name} | ${this.reqCourses[label][i].name}`
+                  );
+                // Use flag to terminate loop early
+                flag = false;
+                break;
+              }
+              // For grouped courses
+            } else {
+              // Iterate through the options
+              for (let j in this.reqCourses[label][i]) {
+                // Same code as individual course case
+                if (this.reqCourses[label][i][j].name === courseName) {
+                  const ind = this.reqCourses[label][i][j].prereqs.indexOf(
+                    course.name
+                  );
+                  if (ind > -1)
+                    this.reqCourses[label][i][j].prereqs.splice(ind, 1);
+                  else
+                    console.log(
+                      `Something went wrong: ${course.name} | ${this.reqCourses[label][i][j].name}`
+                    );
+                  flag = false;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    handleElectiveChecking: function () {
+      // Establish self
+      const self = this;
+      // Reset value
+      this.electivesCompleted = 0;
+      for (let i = 0; i < this.reqCourses.electives.length; i++)
+        // Mark electives as completed
+        if (
+          this.completedCourses.filter(function (course) {
+            return course._id === self.reqCourses.electives[i]._id;
+          }).length > 0
+        ) {
+          this.electivesCompleted++;
+          this.reqCourses.electives[i] = null;
+          if (this.electivesCompleted === this.majorObj.numElectives) break;
+        }
+      // If elective req isn't done
+      if (this.electivesCompleted !== this.majorObj.numElectives)
+        for (let i = 0; i < this.reqCourses.electives.length; i++)
+          if (this.reqCourses.electives[i] !== null)
+            this.remainingCourses.push(this.reqCourses.electives[i]);
+    },
+    handleNumCourses: function () {
+      // Zero this value out
+      this.courses = 0;
+      // Count number of reqs left unsatisfied
+      for (let label of this.majorObj.labels) {
+        // Electives are handled separately
+        if (label === "electives") continue;
+        for (let req of this.reqCourses[label])
+          if (req !== null) this.courses++;
+      }
+      // Account for misc. courses
+      this.courses +=
+        this.majorObj.numGEs -
+        this.gesCompleted +
+        (this.majorObj.numTechBreadths - this.techBreadthsCompleted) +
+        (this.majorObj.numSciTechs - this.sciTechsCompleted) +
+        (this.majorObj.numElectives - this.electivesCompleted);
+    },
+    handleRecommendedCourses: function () {
+      // Clear existing courses out
+      this.recommendedCourses = [];
+      // Find sources and append to recommended courses
+      for (let label of this.majorObj.labels) {
+        // Handle electives edge case
+        if (
+          label === "electives" &&
+          this.electivesCompleted === this.majorObj.numElectives
+        )
+          continue;
+        for (let req of this.reqCourses[label]) {
+          // Handle array edge case
+          if (Array.isArray(req))
+            for (let reqCourse of req) {
+              if (reqCourse !== null && reqCourse.prereqs.length === 0)
+                this.recommendedCourses.push(reqCourse);
+            }
+          // Handle normal courses
+          else if (req !== null && req.prereqs.length === 0)
+            this.recommendedCourses.push(req);
+        }
+      }
+      // Sort courses by the prerequisites they satisfy
+      this.recommendedCourses.sort(this.sortRecommendedCourses);
+    },
   },
   created() {
+    // Return to homepage if user refreshes on summary page to account for non-persistent Vuex state
+    if (this.major === "")
+      this.$router.replace({ path: "/" }).then(() => window.scrollTo(0, 0));
     // Fetch courses
     let uri = "/api/courses";
     axios.get(uri).then((response) => {

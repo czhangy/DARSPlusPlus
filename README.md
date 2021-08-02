@@ -4,7 +4,7 @@
 
 DARS++ is a course planning platform intended for use by UCLA students. It aims to provide convenient access to the most important facets of course planning, presented through a user-friendly interface designed using Vue, with all data being handled by Node/Express/MongoDB.
 
-The most up-to-date version of DARS++ is currently deployed at: https://secure-dawn-67414.herokuapp.com/.
+The most up-to-date version of DARS++ is currently deployed at: https://darsplusplus.herokuapp.com/.
 
 
 
@@ -16,9 +16,8 @@ This project is currently under development. All basic logic and functionality i
 
 #### To Do:
 
-- [ ] Implement topological sort for recommended courses
 - [ ] Responsiveness changes
-- [ ] Create loading screens for better UX
+- [ ] Improve page redirection for better UX
 - [ ] Fix scroll behavior
 - [ ] Implement a hash code system to allow users to save their progress
 - [ ] Collect further data to enable users to access all HSSEAS majors

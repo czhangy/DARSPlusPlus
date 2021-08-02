@@ -58,7 +58,7 @@ export default {
         document.getElementsByTagName("select")[0].style.borderColor = "red";
       } else
         this.$router
-          .push({ path: "summary" })
+          .push({ path: "/summary" })
           .then(() => window.scrollTo(0, 0));
     },
   },
@@ -87,7 +87,6 @@ export default {
 
 <style lang="scss" scoped>
 .home {
-
   .landing-page {
     // Set background image
     background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
