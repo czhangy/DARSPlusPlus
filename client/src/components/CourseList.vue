@@ -2,42 +2,45 @@
   <div class="course-list">
     <ul v-if="contents.length > 0">
       <li v-for="(content, i) in contents" :key="i">
-        <p>{{ content.name }}</p>
+        <div class="course-name">
+          <p>{{ content.name }}</p>
+          <div class="grade-input" v-if="isCompleted">
+            <label>Grade:</label>
+            <select v-model="grades[i]" v-if="isCompleted">
+              <option>A/A+</option>
+              <option>A-</option>
+              <option>B+</option>
+              <option>B</option>
+              <option>B-</option>
+              <option>C+</option>
+              <option>C</option>
+              <option>C-</option>
+              <option>D+</option>
+              <option>D</option>
+              <option>D-</option>
+              <option>F</option>
+              <option>P</option>
+            </select>
+          </div>
+        </div>
         <i
           v-if="isCatalog"
           class="fas fa-check"
           :style="{ color: 'lightgreen' }"
           @click="onClick(content, true)"
         ></i>
-        <div v-if="isCompleted">
-          <label>Grade:</label>
-          <select v-model="grades[i]">
-            <option>A/A+</option>
-            <option>A-</option>
-            <option>B+</option>
-            <option>B</option>
-            <option>B-</option>
-            <option>C+</option>
-            <option>C</option>
-            <option>C-</option>
-            <option>D+</option>
-            <option>D</option>
-            <option>D-</option>
-            <option>F</option>
-            <option>P</option>
-          </select>
-          <i
-            class="far fa-trash-alt"
-            :style="{ color: 'red' }"
-            @click="handleDelete(i, false)"
-          ></i>
-        </div>
+        <i
+          v-if="isCompleted"
+          class="far fa-trash-alt"
+          :style="{ color: 'red' }"
+          @click="handleDelete(i)"
+        ></i>
         <a
           v-if="isRecommended || isRemaining"
           :href="handleBruinwalkLink(content.name)"
           target="_blank"
         >
-          <i class="fas fa-paw" :style="{ color: '#2774AE' }"></i>
+          <i class="fas fa-paw"></i>
         </a>
         <!-- <i
         v-if="isRecommended"
@@ -85,7 +88,8 @@ export default {
     },
   },
   methods: {
-    handleDelete: function (i) {
+    handleDelete: function (ind) {
+      let i = ind;
       // Keep grade selections consistent on deletion
       while (i + 1 < this.contents.length) {
         this.grades[i] = this.grades[i + 1];
@@ -93,7 +97,7 @@ export default {
       }
       // Clear grade data
       this.grades[i] = "";
-      this.onClick(this.contents[i]);
+      this.onClick(this.contents[ind], false);
     },
     handleBruinwalkLink: function (course) {
       // Format course name to Bruinwalk URL format
@@ -128,6 +132,32 @@ export default {
       // Background
       background: white;
 
+      &:last-child {
+        border: none;
+      }
+
+      .course-name {
+        // Flexbox for layout
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+
+        .grade-input {
+          // Spacing
+          margin-top: 1rem;
+
+          select {
+            // Typography
+            font-size: $body-font;
+            font-family: $alt-font;
+            // Spacing
+            margin-left: 1rem;
+            width: 4rem;
+          }
+        }
+      }
+
       p {
         // Typography
         font-size: $header-font;
@@ -135,31 +165,16 @@ export default {
         margin-right: 2rem;
       }
 
-      div {
-        // Flexbox for layout
-        display: flex;
-        justify-content: center;
-        align-items: center;
-
-        select {
-          // Spacing
-          margin-left: 1rem;
-          margin-right: 2rem;
-          // Sizing
-          width: 4rem;
-          // Tpography
-          font-size: $body-font;
-          font-family: $alt-font;
-        }
-      }
-
-      .fa,
-      .far,
-      .fas {
+      i {
         // Sizing
         font-size: 2rem;
         // Clickable
         cursor: pointer;
+      }
+
+      .fa-paw {
+        // Icon styling
+        color: $ucla-blue;
       }
     }
   }
@@ -188,9 +203,7 @@ export default {
 
 // Sticky hover
 @media (hover: hover) {
-  .fa,
-  .fas,
-  .far {
+  i {
     transition: transform 0.2s ease;
 
     &:hover {

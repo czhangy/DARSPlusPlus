@@ -19,17 +19,18 @@
       >
     </p>
     <div class="courses">
-      <div>
+      <div class="course-section">
         <h2>Course Catalog</h2>
         <div class="course-container">
+          <SearchBar :onInput="handleSearch" />
           <CourseList
             :isCatalog="true"
-            :contents="courseCatalog"
+            :contents="filteredCourseCatalog"
             :onClick="handleCourseSelection"
           />
         </div>
       </div>
-      <div>
+      <div class="course-section">
         <h2>Completed Courses</h2>
         <div class="course-container">
           <CourseList
@@ -148,11 +149,13 @@ import axios from "axios";
 
 // Import local components
 import CourseList from "@/components/CourseList";
+import SearchBar from "@/components/SearchBar";
 
 export default {
   name: "Summary",
   components: {
     CourseList,
+    SearchBar,
   },
   computed: {
     ...mapGetters(["major"]),
@@ -161,9 +164,11 @@ export default {
     return {
       // Local state info
       courseCatalog: [],
+      filteredCourseCatalog: [],
       completedCourses: [],
       recommendedCourses: [],
       remainingCourses: [],
+      query: "",
       reqCourses: null,
       grades: [],
       // Misc course state info
@@ -201,6 +206,7 @@ export default {
     };
   },
   methods: {
+    // Custom Sorts
     sortCourses: function (i, j) {
       if (i.name < j.name) return -1;
       else if (i.name > j.name) return 1;
@@ -211,19 +217,42 @@ export default {
       else if (i.reqFor.length < j.reqFor.length) return 1;
       else return 0;
     },
+    // User functions
     handleCourseSelection: function (course, isSelect) {
-      // Set source and destination lists
-      let src = isSelect ? this.courseCatalog : this.completedCourses;
-      let dest = !isSelect ? this.courseCatalog : this.completedCourses;
-      // Get index of element
-      const index = src.indexOf(course);
-      // Remove from source
-      if (index > -1) src.splice(index, 1);
-      else console.log("Error in handleCourseSelection in Summary.vue");
-      // Insert destination
-      dest.push(course);
-      // Sort left list if necessary
-      if (!isSelect) this.courseCatalog.sort(this.sortCourses);
+      // Handle select
+      if (isSelect) {
+        // Remove from master list
+        let ind = this.courseCatalog.indexOf(course);
+        if (ind > -1) this.courseCatalog.splice(ind, 1);
+        else console.log("Something went wrong");
+        // Remove from functional list, if it exists
+        ind = this.filteredCourseCatalog.indexOf(course);
+        if (ind > -1) this.filteredCourseCatalog.splice(ind, 1);
+        this.completedCourses.push(course);
+        // Handle delete
+      } else {
+        // Remove from completed list
+        const ind = this.completedCourses.indexOf(course);
+        if (ind > -1) this.completedCourses.splice(ind, 1);
+        else console.log("Something went wrong");
+        // Insert into master list
+        this.courseCatalog.push(course);
+        // Insert into functional list if necessary
+        this.handleSearch(this.query);
+        // Sort both source lists
+        this.courseCatalog.sort(this.sortCourses);
+        this.filteredCourseCatalog.sort(this.sortCourses);
+      }
+    },
+    handleSearch: function (query) {
+      // Standardize query
+      this.query = query.toUpperCase();
+      // Filter our master list
+      const arr = this.courseCatalog.filter((course) =>
+        course.name.includes(this.query)
+      );
+      // Set functional list to filtered list
+      this.filteredCourseCatalog = [...arr];
     },
     handleCoursesSubmit: function () {
       // Check for user errors in the form
@@ -241,19 +270,20 @@ export default {
       // Load and scroll to next section
       this.submitted = true;
     },
+    // Data processing
     handleFormChecking: function () {
       // Check for invalid grades
       for (let i in this.completedCourses)
         if (this.grades[i] === "" || this.grades[i] == null) return false;
-      for (let i in this.gesCompleted)
+      for (let i in parseInt(this.gesCompleted))
         if (this.geGrades[i] === "" || this.geGrades[i] == null) return false;
-      for (let i in this.techBreadthsCompleted)
+      for (let i in parseInt(this.techBreadthsCompleted))
         if (
           this.techBreadthGrades[i] === "" ||
           this.techBreadthGrades[i] == null
         )
           return false;
-      for (let i in this.sciTechsCompleted)
+      for (let i in parseInt(this.sciTechsCompleted))
         if (this.sciTechGrades[i] === "" || this.sciTechGrades[i] == null)
           return false;
       return true;
@@ -283,19 +313,19 @@ export default {
             this.completedCourses[i].units * gradeMapping[this.grades[i]];
         }
       // Get grade points for GEs
-      for (let i in this.gesCompleted)
+      for (let i in parseInt(this.gesCompleted))
         if (this.geGrades[i] !== "P") {
           units += 5;
           gradePoints += 5 * gradeMapping[this.geGrades[i]];
         }
       // Get grade points for tech breadths
-      for (let i in this.techBreadthsCompleted)
+      for (let i in parseInt(this.techBreadthsCompleted))
         if (this.techBreadthGrades[i] !== "P") {
           units += 4;
           gradePoints += 4 * gradeMapping[this.techBreadthGrades[i]];
         }
       // Get grade points for sci techs
-      for (let i in this.sciTechsCompleted)
+      for (let i in parseInt(this.sciTechsCompleted))
         if (this.sciTechGrades[i] !== "P") {
           units += 4;
           gradePoints += 4 * gradeMapping[this.sciTechGrades[i]];
@@ -532,6 +562,8 @@ export default {
     axios.get(uri).then((response) => {
       // Map to course catalog, make sure to sort by name of course
       this.courseCatalog = response.data.sort(this.sortCourses);
+      // Get a shallow copy of the course catalog
+      this.filteredCourseCatalog = [...this.courseCatalog];
     });
     // Fetch major
     uri = `/api/majors/${this.major}`;
@@ -545,7 +577,7 @@ export default {
 <style lang="scss" scoped>
 .summary {
   // Inner spacing
-  padding: 5rem;
+  padding: calc(clamp(2rem, 1.143rem + 3.429vw, 5rem));
   // Flexbox for centering
   display: flex;
   flex-direction: column;
@@ -567,11 +599,11 @@ export default {
       color: $ucla-blue;
       font-size: $header-font;
       // Spacing
-      margin: 0 3rem;
+      margin: 0 2rem;
       // Centering
       text-align: center;
       // Sizing
-      width: 20%;
+      width: 50%;
     }
 
     hr {
@@ -592,8 +624,8 @@ export default {
     // Centering
     text-align: center;
     // Spacing
-    padding: 0 5rem;
-    margin-top: 5rem;
+    padding: 0 2rem;
+    margin-top: calc(clamp(2.5rem, 1.500rem + 4.000vw, 5rem));
 
     span {
       // Typography
@@ -607,7 +639,7 @@ export default {
     justify-content: space-evenly;
     align-items: center;
     // Spacing
-    margin: 5rem 0;
+    margin: calc(clamp(2.5rem, 1.500rem + 4.000vw, 5rem));
     // Sizing
     width: 100%;
 
@@ -626,6 +658,8 @@ export default {
       overflow-y: scroll;
       // Background
       background: $ucla-blue;
+      // Positioning for search bar
+      position: relative;
     }
   }
 
@@ -633,9 +667,9 @@ export default {
     // Border
     border: $line solid $ucla-blue;
     // Sizing
-    width: 40%;
+    width: 60vw;
     // Spacing
-    margin-bottom: 5rem;
+    margin-bottom: calc(clamp(2.5rem, 1.500rem + 4.000vw, 5rem));
 
     .field {
       // Flexbox for layout
@@ -681,6 +715,11 @@ export default {
       // Inner spacing
       padding: 1rem 0;
 
+      &:last-child {
+        // Remove border from bottom element
+        border-bottom: none;
+      }
+
       label {
         // Typography
         font-weight: bold;
@@ -707,7 +746,7 @@ export default {
     // Inner spacing
     padding: 1rem 2rem;
     // Typography
-    font-size: $body-font;
+    font-size: 1rem;
     // Button styling
     border-radius: 10px;
   }
@@ -729,6 +768,7 @@ export default {
         // Flexbox for layout
         display: flex;
         align-items: center;
+        // Give all elements equal widths
         flex: 1;
 
         h2,
@@ -795,6 +835,50 @@ export default {
     // Typography
     font-size: $header-font;
     font-family: $alt-font;
+  }
+}
+
+// Data section on smaller screens
+@media screen and (max-width: $large-laptop) {
+  .summary {
+    .data {
+      .data-headers {
+        // Column layout instead of row
+        flex-direction: column;
+
+        .mid-container {
+          // Redo spacing for column layout
+          margin: 0.5rem 0;
+        }
+      }
+    }
+  }
+}
+
+// Selection section on smaller screens
+@media screen and (max-width: $laptop) {
+  .summary {
+    .courses {
+      // Column layout instead of row
+      flex-direction: column;
+
+      .course-section {
+        &:last-child {
+          // Spacing
+          margin-top: calc(clamp(2.5rem, 1.500rem + 4.000vw, 5rem));
+        }
+
+        .course-container {
+          // Resize
+          width: 70vw;
+        }
+      }
+    }
+
+    .misc {
+      // Resize
+      width: 70vw;
+    }
   }
 }
 </style>
