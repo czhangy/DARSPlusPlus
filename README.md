@@ -23,12 +23,6 @@ This project is currently under development. All basic logic and functionality i
 
 
 
-## Project Screenshots
-
-[ TO BE INSERTED ]
-
-
-
 ## Installation and Setup
 
 Tools Required:
