@@ -1,5 +1,5 @@
 <template>
-  <div class="footer">
+  <div id="footer">
     <div>
       This site was created by
       <a href="https://czhangy.io/" target="_blank">Charles Zhang</a> using
@@ -19,7 +19,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.footer {
+#footer {
   // Sizing
   width: 100%;
   height: $navbar-height;

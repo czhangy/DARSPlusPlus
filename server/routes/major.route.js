@@ -5,6 +5,7 @@ const MajorCtrl = require('../controllers/major.controller');
 
 // Define routes
 router.get("/", MajorCtrl.findAll);
-router.get("/:majorName", MajorCtrl.findMajor);
+router.get("/name/:majorName", MajorCtrl.findMajorByName);
+router.get("/hash/:hash", MajorCtrl.findMajorByHash);
 
 module.exports = router;

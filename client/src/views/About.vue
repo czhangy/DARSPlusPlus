@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id="about">
     <div class="section">
       <div class="section-text">
         <p class="section-header">What is DARS++?</p>
@@ -88,6 +88,10 @@
           feedback for me, or just want to learn more about me, feel free to
           check out my personal site
           <a href="https://czhangy.io" target="_blank">here</a>.
+          <br />
+          <br />
+          If you want to check out the mess of a codebase that makes this site run, check out the GitHub repo 
+          <a href="https://github.com/czhangy/darsplusplus" target="_blank">here</a>. Leave a star!
         </p>
       </div>
       <div class="section-img">
@@ -118,15 +122,14 @@ export default {
           else arr[i].style.textAlign = "left";
         }
       // Set margins
-
       arr = document.getElementsByClassName("section-text");
       for (let i = 0; i < arr.length; i++) {
         if (window.innerWidth >= 1024) {
           if (i % 2 !== 0) arr[i].style.marginLeft = "4rem";
           else arr[i].style.marginRight = "4rem";
         } else {
-          arr[i].style.marginLeft = '0';
-          arr[i].style.marginRight = '0';
+          arr[i].style.marginLeft = "0";
+          arr[i].style.marginRight = "0";
         }
       }
     },
@@ -135,59 +138,62 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.section {
-  // Container spacing
-  padding: calc(clamp(2rem, 1.200rem + 3.200vw, 4rem)) calc(clamp(2rem, -0.286rem + 9.143vw, 10rem));
-  // Flexbox for alignment
-  display: flex;
-  align-items: center;
-
-  .section-text {
-    .section-header {
-      // Typography
-      font-size: calc(clamp(2.1rem, 1.74rem + 1.44vw, 3rem));
-      text-decoration: underline;
-      letter-spacing: 2px;
-    }
-
-    .section-content {
-      // Typography
-      font-size: $subheader-font;
-      font-family: $alt-font;
-      // Spacing
-      line-height: 1.6;
-
-      .section-subheader {
-        // Typography
-        font-size: $header-font;
-        line-height: 1.8;
-        font-weight: bold;
-      }
-
-      a {
-        // Remove default styling
-        color: black;
-      }
-    }
-  }
-
-  .section-img {
-    // Flexbox for centering
+#about {
+  .section {
+    // Container spacing
+    padding: calc(clamp(2rem, 1.2rem + 3.2vw, 4rem))
+      calc(clamp(2rem, -0.286rem + 9.143vw, 10rem));
+    // Flexbox for alignment
     display: flex;
-    justify-content: center;
     align-items: center;
 
-    img {
-      // Sizing
-      max-height: calc(clamp(20rem, -7.234rem + 42.553vw, 30rem));
-      max-width: calc(clamp(20rem, -7.234rem + 42.553vw, 30rem));
+    .section-text {
+      .section-header {
+        // Typography
+        font-size: calc(clamp(2.1rem, 1.74rem + 1.44vw, 3rem));
+        text-decoration: underline;
+        letter-spacing: 2px;
+      }
+
+      .section-content {
+        // Typography
+        font-size: $subheader-font;
+        font-family: $alt-font;
+        // Spacing
+        line-height: 1.6;
+
+        .section-subheader {
+          // Typography
+          font-size: $header-font;
+          line-height: 1.8;
+          font-weight: bold;
+        }
+
+        a {
+          // Remove default styling
+          color: black;
+        }
+      }
+    }
+
+    .section-img {
+      // Flexbox for centering
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      img {
+        // Sizing
+        max-height: calc(clamp(20rem, -7.234rem + 42.553vw, 30rem));
+        max-width: calc(clamp(20rem, -7.234rem + 42.553vw, 30rem));
+      }
     }
   }
 }
 
 // Media queries
 @media screen and (max-width: 1023px) {
-  .section {
+  #about > .section {
     .section-text {
       // Resize
       width: 100%;
@@ -199,6 +205,7 @@ export default {
 
       .section-content {
         .section-subheader {
+          // Centering
           text-align: center;
         }
       }

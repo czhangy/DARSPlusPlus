@@ -1,11 +1,12 @@
 <template>
-  <div class="summary" v-if="majorObj">
-    <div class="summary-header">
+  <!-- 000gg0000g00000000000000gg00hggr0000000000000000g0000000rrrrgggrigg00gggh0h00000 -->
+  <div id="summary" v-if="majorObj">
+    <div id="summary-header">
       <hr />
-      <h1>{{ major }}</h1>
+      <h1>{{ majorObj.name }}</h1>
       <hr />
     </div>
-    <p class="summary-subheader">
+    <p id="summary-subheader">
       Please select all major-related courses that you have taken, and enter the
       grade you received below!
       <br />
@@ -18,7 +19,7 @@
         available to you.</span
       >
     </p>
-    <div class="courses">
+    <div id="courses">
       <div class="course-section">
         <h2>Course Catalog</h2>
         <div class="course-container">
@@ -26,7 +27,7 @@
           <CourseList
             :isCatalog="true"
             :contents="filteredCourseCatalog"
-            :onClick="handleCourseSelection"
+            :onClick="handleSelect"
           />
         </div>
       </div>
@@ -36,13 +37,13 @@
           <CourseList
             :isCompleted="true"
             :contents="completedCourses"
-            :onClick="handleCourseSelection"
+            :onClick="handleSelect"
             :grades="grades"
           />
         </div>
       </div>
     </div>
-    <div class="misc">
+    <div id="misc">
       <div class="field">
         <label>GEs: </label>
         <input v-model="gesCompleted" />
@@ -101,18 +102,18 @@
         </select>
       </div>
     </div>
-    <p class="error-message" v-if="gradeError">
+    <p id="error-message" v-if="gradeError">
       Please ensure all grades are entered properly!
     </p>
-    <button @click="handleCoursesSubmit">SUBMIT!</button>
+    <button @click="handleSubmit">SUBMIT!</button>
     <div v-if="submitted" class="separator" />
-    <div v-if="submitted" ref="data" class="data">
-      <div class="data-headers">
+    <div v-if="submitted" ref="data" id="data">
+      <div id="data-headers">
         <div class="data-container">
           <h2>GPA:</h2>
           <p>{{ gpa }}</p>
         </div>
-        <div class="data-container mid-container">
+        <div class="data-container" id="mid-container">
           <h2>Remaining Courses:</h2>
           <p>{{ courses }}</p>
         </div>
@@ -133,12 +134,17 @@
           <CourseList :isRemaining="true" :contents="remainingCourses" />
         </div>
       </div>
+      <div id="hash-code">
+        <p>{{ hashCode }}</p>
+        <i class="fas fa-clipboard" @click="handleCopy"></i>
+      </div>
+      <p id="hash-message">Copy me to save your progress!</p>
     </div>
   </div>
-  <div class="loading-screen" v-else>
+  <div id="loading-screen" v-else>
     <img src="@/assets/img/Summary/loading.gif" alt="" />
-    <p class="loading-header">LOADING</p>
-    <p class="loading-subheader">This may take up to 30 seconds</p>
+    <p id="loading-header">LOADING</p>
+    <p id="loading-subheader">This may take up to 30 seconds</p>
   </div>
 </template>
 
@@ -158,11 +164,12 @@ export default {
     SearchBar,
   },
   computed: {
-    ...mapGetters(["major"]),
+    ...mapGetters(["major", "hash"]),
   },
   data() {
     return {
       // Local state info
+      courseList: [],
       courseCatalog: [],
       filteredCourseCatalog: [],
       completedCourses: [],
@@ -183,12 +190,13 @@ export default {
       gpa: "N/A",
       courses: 0,
       units: 0,
+      hashCode: "",
       // Page state
       majorObj: null,
       submitted: false,
       // Form handling
       gradeError: false,
-      // Preset value
+      // Hard coded value
       gradeLabels: [
         "A/A+",
         "A-",
@@ -218,7 +226,7 @@ export default {
       else return 0;
     },
     // User functions
-    handleCourseSelection: function (course, isSelect) {
+    handleSelect: function (course, isSelect) {
       // Handle select
       if (isSelect) {
         // Remove from master list
@@ -254,7 +262,7 @@ export default {
       // Set functional list to filtered list
       this.filteredCourseCatalog = [...arr];
     },
-    handleCoursesSubmit: function () {
+    handleSubmit: function () {
       // Check for user errors in the form
       if (!this.handleFormChecking()) {
         this.gradeError = true;
@@ -267,6 +275,8 @@ export default {
       this.handleGPACalculation();
       // Mark courses that have been completed
       this.handleCourseChecking();
+      // Generate the hash code
+      this.handleHashGeneration();
       // Load and scroll to next section
       this.submitted = true;
     },
@@ -552,30 +562,170 @@ export default {
       // Sort courses by the prerequisites they satisfy
       this.recommendedCourses.sort(this.sortRecommendedCourses);
     },
+    // Hash code handling
+    handleHashGeneration: function () {
+      // Clear hash
+      this.hashCode = "";
+      // Encode the major
+      let majorHash = parseInt(this.majorObj.hashNum).toString(16);
+      // Pad 0s
+      this.hashCode += majorHash.length === 1 ? "0" + majorHash : majorHash;
+      // Encode the courses + grades
+      for (let course of this.courseList) {
+        // Check if course is completed
+        let ind = this.completedCourses.findIndex(
+          (cc) => cc.name === course.name
+        );
+        // Set base-32 value
+        this.hashCode +=
+          ind === -1
+            ? "0"
+            : (this.gradeLabels.indexOf(this.grades[ind]) + 16).toString(32);
+      }
+      // Encode GE grades
+      for (let i = 0; i < this.majorObj.numGEs; i++)
+        this.hashCode +=
+          i + 1 > this.gesCompleted
+            ? "0"
+            : (this.gradeLabels.indexOf(this.geGrades[i]) + 16).toString(32);
+      // Encode TB grades
+      for (let i = 0; i < this.majorObj.numTechBreadths; i++)
+        this.hashCode +=
+          i + 1 > this.techBreadthsCompleted
+            ? "0"
+            : (
+                this.gradeLabels.indexOf(this.techBreadthGrades[i]) + 16
+              ).toString(32);
+      // Encode ST grades
+      for (let i = 0; i < this.majorObj.numSciTechs; i++)
+        this.hashCode +=
+          i + 1 > this.sciTechsCompleted
+            ? "0"
+            : (this.gradeLabels.indexOf(this.sciTechGrades[i]) + 16).toString(
+                32
+              );
+    },
+    handleHashRead: function () {
+      const len =
+        this.hash.length -
+        this.majorObj.numGEs -
+        this.majorObj.numTechBreadths -
+        this.majorObj.numSciTechs;
+      let i;
+      // Error check
+      if (len !== this.courseList.length)
+        // Send to error screen
+        this.$router
+          .replace({ path: "/error" })
+          .then(() => window.scrollTo(0, 0));
+      // Handle normal courses
+      for (i = 2; i < len; i++) {
+        if (this.hash[i] === "0") continue;
+        if (this.hash[i] == null)
+          this.$router
+            .replace({ path: "/error" })
+            .then(() => window.scrollTo(0, 0));
+        // Adjust course catalog
+        let course = this.courseList[i - 2];
+        let ind = this.courseCatalog.findIndex((cc) => cc.name === course.name);
+        // Error checking
+        if (ind > -1) {
+          this.courseCatalog.splice(ind, 1);
+          this.completedCourses.push(course);
+        } else console.log("Something went wrong");
+        // Adjust filtered course catalog
+        ind = this.filteredCourseCatalog.findIndex(
+          (cc) => cc.name === course.name
+        );
+        // Error checking
+        if (ind > -1) this.filteredCourseCatalog.splice(ind, 1);
+        else console.log("Something went wrong");
+        // Extract grade
+        this.grades.push(this.gradeLabels[parseInt(this.hash[i], 32) - 16]);
+      }
+      // Handle GEs
+      for (let j = 0; j < this.majorObj.numGEs; i++, j++) {
+        if (this.hash[i] === "0") continue;
+        if (this.hash[i] == null)
+          this.$router
+            .replace({ path: "/error" })
+            .then(() => window.scrollTo(0, 0));
+        this.gesCompleted++;
+        this.geGrades.push(this.gradeLabels[parseInt(this.hash[i], 32) - 16]);
+      }
+      // Handle TBs
+      for (let j = 0; j < this.majorObj.numTechBreadths; i++, j++) {
+        if (this.hash[i] === "0") continue;
+        if (this.hash[i] == null)
+          this.$router
+            .replace({ path: "/error" })
+            .then(() => window.scrollTo(0, 0));
+        this.techBreadthsCompleted++;
+        this.techBreadthGrades.push(
+          this.gradeLabels[parseInt(this.hash[i], 32) - 16]
+        );
+      }
+      // Handle STs
+      for (let j = 0; j < this.majorObj.numSciTechs; i++, j++) {
+        if (this.hash[i] === "0") continue;
+        if (this.hash[i] == null)
+          this.$router
+            .replace({ path: "/error" })
+            .then(() => window.scrollTo(0, 0));
+        this.sciTechsCompleted++;
+        this.sciTechGrades.push(
+          this.gradeLabels[parseInt(this.hash[i], 32) - 16]
+        );
+      }
+    },
+    handleCopy: function () {
+      const e = document.createElement("textarea");
+      e.value = this.hashCode;
+      document.body.appendChild(e);
+      e.select();
+      document.execCommand("copy");
+      document.body.removeChild(e);
+    },
   },
   created() {
-    // Return to homepage if user refreshes on summary page to account for non-persistent Vuex state
-    if (this.major === "")
-      this.$router.replace({ path: "/" }).then(() => window.scrollTo(0, 0));
-    // Fetch courses
-    let uri = "/api/courses";
-    axios.get(uri).then((response) => {
-      // Map to course catalog, make sure to sort by name of course
-      this.courseCatalog = response.data.sort(this.sortCourses);
-      // Get a shallow copy of the course catalog
-      this.filteredCourseCatalog = [...this.courseCatalog];
-    });
-    // Fetch major
-    uri = `/api/majors/${this.major}`;
-    axios.get(uri).then((response) => {
-      this.majorObj = response.data;
-    });
+    try {
+      // Return to homepage if user refreshes on summary page to account for non-persistent Vuex state
+      if (this.major === "" && this.hash === "")
+        this.$router.replace({ path: "/" }).then(() => window.scrollTo(0, 0));
+      // Fetch courses
+      let uri = "/api/courses";
+      axios.get(uri).then((response) => {
+        // Map to course catalog, make sure to sort by name of course
+        this.courseList = response.data.sort(this.sortCourses);
+        // Get a shallow copy of the course list
+        this.courseCatalog = [...this.courseList];
+        this.filteredCourseCatalog = [...this.courseList];
+      });
+      // Fetch major
+      uri =
+        this.hash === ""
+          ? `/api/majors/name/${this.major}`
+          : `/api/majors/hash/${parseInt(
+              this.hash.substring(0, 2),
+              16
+            ).toString(10)}`;
+      axios.get(uri).then((response) => {
+        this.majorObj = response.data;
+        // Set courses from hash if necessary
+        if (this.hash !== "") this.handleHashRead();
+      });
+    } catch {
+      // Send to error screen
+      this.$router
+        .replace({ path: "/error" })
+        .then(() => window.scrollTo(0, 0));
+    }
   },
 };
 </script>
 
 <style lang="scss" scoped>
-.summary {
+#summary {
   // Inner spacing
   padding: calc(clamp(2rem, 1.143rem + 3.429vw, 5rem));
   // Flexbox for centering
@@ -586,7 +736,16 @@ export default {
   // Sizing
   width: 100%;
 
-  .summary-header {
+  button {
+    // Inner spacing
+    padding: 1rem 2rem;
+    // Typography
+    font-size: 1rem;
+    // Button styling
+    border-radius: 10px;
+  }
+
+  #summary-header {
     // Flexbox for layout
     display: flex;
     justify-content: center;
@@ -617,7 +776,7 @@ export default {
     }
   }
 
-  .summary-subheader {
+  #summary-subheader {
     // Typography
     font-family: $alt-font;
     font-size: $subheader-font;
@@ -625,7 +784,7 @@ export default {
     text-align: center;
     // Spacing
     padding: 0 2rem;
-    margin-top: calc(clamp(2.5rem, 1.500rem + 4.000vw, 5rem));
+    margin-top: calc(clamp(2.5rem, 1.5rem + 4vw, 5rem));
 
     span {
       // Typography
@@ -633,13 +792,13 @@ export default {
     }
   }
 
-  .courses {
+  #courses {
     // Flexbox for layout
     display: flex;
     justify-content: space-evenly;
     align-items: center;
     // Spacing
-    margin: calc(clamp(2.5rem, 1.500rem + 4.000vw, 5rem));
+    margin: calc(clamp(2.5rem, 1.5rem + 4vw, 5rem));
     // Sizing
     width: 100%;
 
@@ -663,13 +822,13 @@ export default {
     }
   }
 
-  .misc {
+  #misc {
     // Border
     border: $line solid $ucla-blue;
     // Sizing
     width: 60vw;
     // Spacing
-    margin-bottom: calc(clamp(2.5rem, 1.500rem + 4.000vw, 5rem));
+    margin-bottom: calc(clamp(2.5rem, 1.5rem + 4vw, 5rem));
 
     .field {
       // Flexbox for layout
@@ -734,7 +893,7 @@ export default {
     }
   }
 
-  .error-message {
+  #error-message {
     // Typography
     color: red;
     font-family: $alt-font;
@@ -742,23 +901,20 @@ export default {
     margin-bottom: 1rem;
   }
 
-  button {
-    // Inner spacing
-    padding: 1rem 2rem;
-    // Typography
-    font-size: 1rem;
-    // Button styling
-    border-radius: 10px;
-  }
-
-  .data {
+  #data {
     // Sizing
     width: 100%;
+    // Flexbox for centering
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 
-    .data-headers {
+    #data-headers {
       // Flexbox for layout
       display: flex;
       justify-content: space-evenly;
+      // Sizing
+      width: 100%;
 
       .data-container {
         // Container
@@ -790,7 +946,7 @@ export default {
         }
       }
 
-      .mid-container {
+      #mid-container {
         // Spacing
         margin: 0 0.5rem;
       }
@@ -799,6 +955,7 @@ export default {
     .data-courses {
       // Spacing
       margin: 3rem 0;
+      width: 100%;
 
       .data-course-list {
         // Sizing
@@ -811,10 +968,57 @@ export default {
         background: $ucla-blue;
       }
     }
+
+    #hash-code {
+      // Box styling
+      border: $line solid $ucla-blue;
+      // Sizing
+      max-width: 20rem;
+      // Container spacing
+      padding: 0.5rem;
+      // Typography
+      font-size: $subheader-font;
+      // Flexbox for layout
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      // Spacing
+      margin-bottom: 0.5rem;
+
+      p {
+        // Typography
+        font-family: $alt-font;
+        // Handle overflow
+        overflow-x: scroll;
+        // Hide scrollbar on IE and Edge
+        -ms-overflow-style: none;
+        // Hide scrollbar on Firefox
+        scrollbar-width: none;
+      }
+
+      p::-webkit-scrollbar {
+        // Hide scrollbar on Chrome, Safari, and Opera
+        display: none;
+      }
+
+      .fa-clipboard {
+        // Icon styling
+        color: $ucla-blue;
+        // Clickable
+        cursor: pointer;
+        // Spacing
+        margin-left: 0.5rem;
+      }
+    }
+
+    #hash-message {
+      // Typography
+      font-size: $subheader-font;
+    }
   }
 }
 
-.loading-screen {
+#loading-screen {
   // Sizing
   height: calc(100vh - 220px);
   width: 100%;
@@ -824,14 +1028,14 @@ export default {
   justify-content: center;
   align-items: center;
 
-  .loading-header {
+  #loading-header {
     // Typography
     font-size: $title-font;
     // Spacing
     margin-top: 2rem;
   }
 
-  .loading-subheader {
+  #loading-subheader {
     // Typography
     font-size: $header-font;
     font-family: $alt-font;
@@ -840,13 +1044,13 @@ export default {
 
 // Data section on smaller screens
 @media screen and (max-width: $large-laptop) {
-  .summary {
-    .data {
+  #summary {
+    #data {
       .data-headers {
         // Column layout instead of row
         flex-direction: column;
 
-        .mid-container {
+        #mid-container {
           // Redo spacing for column layout
           margin: 0.5rem 0;
         }
@@ -857,15 +1061,15 @@ export default {
 
 // Selection section on smaller screens
 @media screen and (max-width: $laptop) {
-  .summary {
-    .courses {
+  #summary {
+    #courses {
       // Column layout instead of row
       flex-direction: column;
 
       .course-section {
         &:last-child {
           // Spacing
-          margin-top: calc(clamp(2.5rem, 1.500rem + 4.000vw, 5rem));
+          margin-top: calc(clamp(2.5rem, 1.5rem + 4vw, 5rem));
         }
 
         .course-container {
@@ -875,7 +1079,7 @@ export default {
       }
     }
 
-    .misc {
+    #misc {
       // Resize
       width: 70vw;
     }

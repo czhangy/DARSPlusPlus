@@ -80,8 +80,7 @@ button {
   button {
     &:hover {
       // Animate button on hover
-      transform: scale(1.05);
-      transition: transform 0.2s ease;
+      background: $ucla-dark-blue !important;
     }
   }
 }

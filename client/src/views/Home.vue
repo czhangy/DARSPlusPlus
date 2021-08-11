@@ -1,6 +1,6 @@
 <template>
-  <div class="home">
-    <div class="landing-page">
+  <div id="home">
+    <div id="landing-page">
       <h1>Welcome to DARS++</h1>
       <h2>A student solution to course planning at UCLA</h2>
       <button
@@ -9,13 +9,13 @@
         Get Started!
       </button>
     </div>
-    <div class="form-section" ref="form">
+    <div id="form-section" ref="form">
       <h3>Resume your progress</h3>
       <label>Paste your hash code here:</label>
-      <input v-model="hashCode" />
-      <p v-if="hashError">Sorry, this feature has not been implemented yet</p>
+      <input v-model="selectedHash" />
+      <p v-if="hashError">Please enter a valid hash code</p>
       <button @click="handleHashSubmit">GO!</button>
-      <div class="divider">
+      <div id="divider">
         <hr />
         <span>or</span>
         <hr />
@@ -41,7 +41,6 @@ export default {
   name: "Home",
   data() {
     return {
-      hashCode: "",
       hashError: false,
       majorError: false,
       majorList: [],
@@ -49,21 +48,36 @@ export default {
   },
   methods: {
     handleHashSubmit: function () {
-      this.hashError = true;
+      if (
+        this.hash === "" ||
+        parseInt(this.hash.substring(0, 2), 16) >= this.majorList.length
+      ) {
+        this.hashError = true;
+        document.getElementsByTagName("input")[0].style.borderColor = "red";
+      } else {
+        // Clear other option
+        this.selectedMajor = "";
+        this.$router
+          .push({ path: "/summary" })
+          .then(() => window.scrollTo(0, 0));
+      }
     },
     handleMajorSubmit: function () {
       // Handle error if no major has been selected
       if (this.major === "") {
         this.majorError = true;
         document.getElementsByTagName("select")[0].style.borderColor = "red";
-      } else
+      } else {
+        // Clear other option
+        this.selectedHash = "";
         this.$router
           .push({ path: "/summary" })
           .then(() => window.scrollTo(0, 0));
+      }
     },
   },
   computed: {
-    ...mapGetters(["major"]),
+    ...mapGetters(["major", "hash"]),
     selectedMajor: {
       get() {
         return this.$store.state.major;
@@ -72,10 +86,19 @@ export default {
         this.$store.commit("setMajor", value);
       },
     },
+    selectedHash: {
+      get() {
+        return this.$store.state.hash;
+      },
+      set(value) {
+        this.$store.commit("setHash", value);
+      },
+    },
   },
   created() {
     // Reset global state
     this.selectedMajor = "";
+    this.selectedHash = "";
     // Get major listings
     let uri = "/api/majors";
     axios.get(uri).then((response) => {
@@ -86,8 +109,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.home {
-  .landing-page {
+#home {
+  #landing-page {
     // Set background image
     background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
       url("../assets/img/Home/landing-page.jpg");
@@ -140,7 +163,7 @@ export default {
     }
   }
 
-  .form-section {
+  #form-section {
     // Typography
     color: $font-color;
     font-family: $alt-font;
@@ -195,7 +218,7 @@ export default {
       border-radius: 10px;
     }
 
-    .divider {
+    #divider {
       // Flexbox for layout and centering
       display: flex;
       justify-content: center;

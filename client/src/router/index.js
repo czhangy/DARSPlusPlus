@@ -16,6 +16,11 @@ const routes = [
     name: "Summary",
     component: () => import("@/views/Summary.vue"),
   },
+  {
+    path: "/error",
+    name: "Error",
+    component: () => import("@/views/Error.vue"),
+  },
 ];
 
 const router = createRouter({

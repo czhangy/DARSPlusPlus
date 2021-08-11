@@ -42,11 +42,6 @@
         >
           <i class="fas fa-paw"></i>
         </a>
-        <!-- <i
-        v-if="isRecommended"
-        class="far fa-question-circle"
-        :style="{ color: 'grey' }"
-      ></i> -->
       </li>
     </ul>
     <div class="empty-text" v-else>

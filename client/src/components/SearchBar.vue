@@ -1,7 +1,7 @@
 <template>
-  <div class="search-bar">
+  <div id="search-bar">
     <input placeholder="Find a course" v-model="query" @input="onInput(query)" />
-    <div class="search-icon">
+    <div id="search-icon">
       <i class="fa fa-search" aria-hidden="true"></i>
     </div>
   </div>
@@ -25,7 +25,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.search-bar {
+#search-bar {
   // Sizing
   width: 100%;
   // Container styling
@@ -55,7 +55,7 @@ export default {
     height: 3rem;
   }
 
-  .search-icon {
+  #search-icon {
     // Container styling
     background: white;
     // Sizing

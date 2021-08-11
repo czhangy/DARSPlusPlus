@@ -1,7 +1,7 @@
 <template>
-  <div class="navbar">
+  <div id="navbar">
     <router-link to="/">DARS++</router-link>
-    <div class="page-links">
+    <div id="page-links">
       <router-link to="/about">About</router-link>
     </div>
   </div>
@@ -14,7 +14,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.navbar {
+#navbar {
   // Sizing
   width: 100%;
   height: $navbar-height;
@@ -37,11 +37,21 @@ export default {
     text-decoration: none;
   }
 
-  .page-links > a {
-      // Typography
-      font-size: $header-font;
-      // Spacing
-      margin-left: 3rem;
+  #page-links > a {
+    // Typography
+    font-size: $header-font;
+    // Spacing
+    margin-left: 3rem;
+  }
+}
+
+// Handle sticky hover
+@media (hover: hover) {
+  #navbar > a,
+  #navbar > #page-links > a {
+    &:hover {
+      color: $ucla-gold;
+    }
   }
 }
 </style>
