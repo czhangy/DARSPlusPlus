@@ -4,8 +4,10 @@ const express = require("express");
 const cors = require("cors");
 // Database connection
 const mongoose = require("mongoose");
-
+// Use of .env
 require("dotenv").config();
+// Handle history routing
+const history = require('connect-history-api-fallback');
 
 // Init app
 const app = express();
@@ -13,6 +15,7 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(history());
 
 // MongoDB setup
 const uri = process.env.ATLAS_URI;
