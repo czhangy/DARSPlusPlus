@@ -17,7 +17,7 @@ const routes = [
     component: () => import("@/views/Summary.vue"),
   },
   {
-    path: "/error",
+    path: "/:catchAll(.*)",
     name: "Error",
     component: () => import("@/views/Error.vue"),
   },
